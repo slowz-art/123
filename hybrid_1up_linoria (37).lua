@@ -3552,67 +3552,22 @@ local Library do
                 Debounce = true
 
                 local Main = Items["MainFrame"].Instance
-                local animTime = 0.38
-                local slideOffset = 55
+                local animTime = 0.35
+                local slideOffset = 50
 
-                if not Window._RestPos then
+                -- Use current position so dragging doesn't break reopen
+                if Main.Visible then
+                    Window._RestPos = Main.Position
+                elseif not Window._RestPos then
                     Window._RestPos = Main.Position
                 end
                 local rest = Window._RestPos
 
-                local function fadeAll(toHidden)
-                    local ti = TweenInfo.new(animTime, Enum.EasingStyle.Quint, toHidden and Enum.EasingDirection.In or Enum.EasingDirection.Out)
-                    local function fadeObj(obj)
-                        pcall(function()
-                            if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
-                                if toHidden then
-                                    TweenService:Create(obj, ti, { BackgroundTransparency = 1 }):Play()
-                                end
-                            elseif obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                                if toHidden then
-                                    TweenService:Create(obj, ti, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
-                                end
-                            elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-                                if toHidden then
-                                    TweenService:Create(obj, ti, { ImageTransparency = 1, BackgroundTransparency = 1 }):Play()
-                                end
-                            elseif obj:IsA("UIStroke") then
-                                if toHidden then
-                                    TweenService:Create(obj, ti, { Transparency = 1 }):Play()
-                                end
-                            end
-                        end)
-                    end
-                    if toHidden then
-                        fadeObj(Main)
-                        for _, d in ipairs(Main:GetDescendants()) do
-                            fadeObj(d)
-                        end
-                    else
-                        -- reopen: use original fade system so theme transparencies restore
-                        local Descendants = Main:GetDescendants()
-                        TableInsert(Descendants, Main)
-                        for Index, Value in Descendants do
-                            local TransparencyProperty = Tween:GetProperty(Value)
-                            if not TransparencyProperty then
-                                continue
-                            end
-                            if type(TransparencyProperty) == "table" then
-                                for _, Property in TransparencyProperty do
-                                    Tween:FadeItem(Value, Property, true, animTime)
-                                end
-                            else
-                                Tween:FadeItem(Value, TransparencyProperty, true, animTime)
-                            end
-                        end
-                    end
-                    return ti
-                end
-
                 if Window.IsOpen then
+                    -- Open: slide down only (no transparency edits — theme stays intact)
                     Main.Visible = true
                     Main.Position = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
-                    fadeAll(false)
+
                     local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                         Position = rest
                     })
@@ -3620,16 +3575,21 @@ local Library do
                     posTween.Completed:Connect(function()
                         Debounce = false
                     end)
+                    task.delay(animTime + 0.05, function()
+                        Debounce = false
+                    end)
                 else
-                    fadeAll(true)
+                    -- Close: slide up only, then hide (no transparency edits)
                     local upPos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
                     local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                         Position = upPos
                     })
                     posTween:Play()
                     posTween.Completed:Connect(function()
-                        Main.Visible = false
-                        Main.Position = rest
+                        if not Window.IsOpen then
+                            Main.Visible = false
+                            Main.Position = rest
+                        end
                         Debounce = false
                     end)
                     task.delay(animTime + 0.05, function()
