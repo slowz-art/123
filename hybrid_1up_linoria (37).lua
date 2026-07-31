@@ -2849,7 +2849,42 @@ local Library do
                 })  Items["CloseIcon"]:AddToTheme({ImageColor3 = "Text"})        
                 
                 Items["CloseButton"]:Connect("MouseButton1Down", function()
-                    Library:Unload()
+                    -- Smooth slide-up close, then unload (paid-ui style)
+                    if Window._Closing then return end
+                    Window._Closing = true
+
+                    local Main = Items["MainFrame"].Instance
+                    if not Window._RestPos then
+                        Window._RestPos = Main.Position
+                    end
+                    local rest = Window._RestPos
+                    local animTime = 0.38
+                    local ti = TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+                    local upPos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - 55)
+
+                    TweenService:Create(Main, ti, { Position = upPos }):Play()
+
+                    local function fadeObj(obj)
+                        pcall(function()
+                            if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
+                                TweenService:Create(obj, ti, { BackgroundTransparency = 1 }):Play()
+                            elseif obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                                TweenService:Create(obj, ti, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
+                            elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+                                TweenService:Create(obj, ti, { ImageTransparency = 1, BackgroundTransparency = 1 }):Play()
+                            elseif obj:IsA("UIStroke") then
+                                TweenService:Create(obj, ti, { Transparency = 1 }):Play()
+                            end
+                        end)
+                    end
+                    fadeObj(Main)
+                    for _, d in ipairs(Main:GetDescendants()) do
+                        fadeObj(d)
+                    end
+
+                    task.delay(animTime + 0.02, function()
+                        pcall(function() Library:Unload() end)
+                    end)
                 end)
 
                 Items["CloseIconAccent"] = Instances:Create("Frame", {
@@ -3517,40 +3552,68 @@ local Library do
                 Debounce = true
 
                 local Main = Items["MainFrame"].Instance
-                local animTime = 0.32
-                local slideOffset = 40
-                local style = Enum.EasingStyle.Quint
-                local dirOut = Enum.EasingDirection.Out
-                local dirIn = Enum.EasingDirection.In
+                local animTime = 0.38
+                local slideOffset = 55
 
-                -- Remember resting position once
                 if not Window._RestPos then
                     Window._RestPos = Main.Position
                 end
                 local rest = Window._RestPos
 
-                if Window.IsOpen then
-                    -- Open: slide down from above + fade in
-                    Main.Visible = true
-                    Main.Position = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
-
-                    local Descendants = Main:GetDescendants()
-                    TableInsert(Descendants, Main)
-                    for Index, Value in Descendants do
-                        local TransparencyProperty = Tween:GetProperty(Value)
-                        if not TransparencyProperty then
-                            continue
-                        end
-                        if type(TransparencyProperty) == "table" then
-                            for _, Property in TransparencyProperty do
-                                Tween:FadeItem(Value, Property, true, animTime)
+                local function fadeAll(toHidden)
+                    local ti = TweenInfo.new(animTime, Enum.EasingStyle.Quint, toHidden and Enum.EasingDirection.In or Enum.EasingDirection.Out)
+                    local function fadeObj(obj)
+                        pcall(function()
+                            if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
+                                if toHidden then
+                                    TweenService:Create(obj, ti, { BackgroundTransparency = 1 }):Play()
+                                end
+                            elseif obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                                if toHidden then
+                                    TweenService:Create(obj, ti, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
+                                end
+                            elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+                                if toHidden then
+                                    TweenService:Create(obj, ti, { ImageTransparency = 1, BackgroundTransparency = 1 }):Play()
+                                end
+                            elseif obj:IsA("UIStroke") then
+                                if toHidden then
+                                    TweenService:Create(obj, ti, { Transparency = 1 }):Play()
+                                end
                             end
-                        else
-                            Tween:FadeItem(Value, TransparencyProperty, true, animTime)
+                        end)
+                    end
+                    if toHidden then
+                        fadeObj(Main)
+                        for _, d in ipairs(Main:GetDescendants()) do
+                            fadeObj(d)
+                        end
+                    else
+                        -- reopen: use original fade system so theme transparencies restore
+                        local Descendants = Main:GetDescendants()
+                        TableInsert(Descendants, Main)
+                        for Index, Value in Descendants do
+                            local TransparencyProperty = Tween:GetProperty(Value)
+                            if not TransparencyProperty then
+                                continue
+                            end
+                            if type(TransparencyProperty) == "table" then
+                                for _, Property in TransparencyProperty do
+                                    Tween:FadeItem(Value, Property, true, animTime)
+                                end
+                            else
+                                Tween:FadeItem(Value, TransparencyProperty, true, animTime)
+                            end
                         end
                     end
+                    return ti
+                end
 
-                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, style, dirOut), {
+                if Window.IsOpen then
+                    Main.Visible = true
+                    Main.Position = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
+                    fadeAll(false)
+                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                         Position = rest
                     })
                     posTween:Play()
@@ -3558,28 +3621,10 @@ local Library do
                         Debounce = false
                     end)
                 else
-                    -- Close: slide up + fade out (paid-ui style)
-                    local closePos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
-
-                    local Descendants = Main:GetDescendants()
-                    TableInsert(Descendants, Main)
-                    local NewTween
-                    for Index, Value in Descendants do
-                        local TransparencyProperty = Tween:GetProperty(Value)
-                        if not TransparencyProperty then
-                            continue
-                        end
-                        if type(TransparencyProperty) == "table" then
-                            for _, Property in TransparencyProperty do
-                                NewTween = Tween:FadeItem(Value, Property, false, animTime)
-                            end
-                        else
-                            NewTween = Tween:FadeItem(Value, TransparencyProperty, false, animTime)
-                        end
-                    end
-
-                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, style, dirIn), {
-                        Position = closePos
+                    fadeAll(true)
+                    local upPos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
+                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                        Position = upPos
                     })
                     posTween:Play()
                     posTween.Completed:Connect(function()
@@ -3587,16 +3632,13 @@ local Library do
                         Main.Position = rest
                         Debounce = false
                     end)
-
-                    if not NewTween or not NewTween.Tween then
-                        task.delay(animTime, function()
-                            if not Window.IsOpen then
-                                Main.Visible = false
-                                Main.Position = rest
-                            end
-                            Debounce = false
-                        end)
-                    end
+                    task.delay(animTime + 0.05, function()
+                        if not Window.IsOpen then
+                            Main.Visible = false
+                            Main.Position = rest
+                        end
+                        Debounce = false
+                    end)
                 end
             end
 
@@ -4920,30 +4962,110 @@ local Library do
             end
 
             function Section:ToggleBackground()
+                if Section._Animating then
+                    return
+                end
+                Section._Animating = true
                 Section.IsActive = not Section.IsActive
 
-                if not Section.IsActive then 
-                    Items["Fade"].Instance.Visible = false
-                    Items["Background"].Instance.Visible = false
+                local Sec = Items["Section"].Instance
+                local Bg = Items["Background"].Instance
+                local Content = Items["Content"].Instance
+                local animTime = 0.28
+                local ti = TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                local headerH = 55
 
+                if not Section.IsActive then
+                    -- Collapse: fade content + slide height to header
+                    Items["Fade"].Instance.Visible = false
                     Items["Gradient"].Instance.Enabled = false
                     Items["Toggle"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                     Items["Toggle"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
                     Items["Circle"]:Tween(nil, {AnchorPoint = Vector2New(0, 0.5), Position = UDim2New(0, 4, 0.5, 0), BackgroundColor3 = Library.Theme.Text, BackgroundTransparency = 0.6})
 
-                    Items["Section"].Instance.AutomaticSize = Enum.AutomaticSize.None
-                    Items["Section"].Instance.Size = UDim2New(1, 0, 0, 55)
-                else
-                    Items["Background"].Instance.Visible = true
-                    Items["Fade"].Instance.Visible = false
+                    local fullH = math.max(Sec.AbsoluteSize.Y, headerH)
+                    Section._OpenHeight = fullH
 
+                    Sec.AutomaticSize = Enum.AutomaticSize.None
+                    Sec.Size = UDim2New(1, 0, 0, fullH)
+                    Bg.Visible = true
+                    Bg.ClipsDescendants = true
+
+                    -- Fade content children
+                    for _, d in ipairs(Content:GetDescendants()) do
+                        pcall(function()
+                            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+                                TweenService:Create(d, ti, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
+                            elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
+                                TweenService:Create(d, ti, { ImageTransparency = 1, BackgroundTransparency = 1 }):Play()
+                            elseif d:IsA("Frame") or d:IsA("ScrollingFrame") then
+                                TweenService:Create(d, ti, { BackgroundTransparency = 1 }):Play()
+                            end
+                        end)
+                    end
+                    pcall(function()
+                        TweenService:Create(Bg, ti, { BackgroundTransparency = 1 }):Play()
+                    end)
+
+                    local sizeTween = TweenService:Create(Sec, ti, { Size = UDim2New(1, 0, 0, headerH) })
+                    sizeTween:Play()
+                    sizeTween.Completed:Connect(function()
+                        Bg.Visible = false
+                        Section._Animating = false
+                    end)
+                else
+                    -- Expand: restore height + fade content in
+                    Items["Fade"].Instance.Visible = false
                     Items["Gradient"].Instance.Enabled = true
                     Items["Toggle"]:ChangeItemTheme({BackgroundColor3 = "Text"})
                     Items["Toggle"]:Tween(nil, {BackgroundColor3 = Library.Theme.Text})
                     Items["Circle"]:Tween(nil, {AnchorPoint = Vector2New(1, 0.5), Position = UDim2New(1, -4, 0.5, 0), BackgroundColor3 = Library.Theme.Text, BackgroundTransparency = 0})
 
-                    Items["Section"].Instance.AutomaticSize = Enum.AutomaticSize.Y
-                    Items["Section"].Instance.Size = UDim2New(1, 0, 0, 45)
+                    Bg.Visible = true
+                    Bg.ClipsDescendants = true
+                    Bg.BackgroundTransparency = 1
+
+                    -- Measure natural content height
+                    Sec.AutomaticSize = Enum.AutomaticSize.None
+                    Sec.Size = UDim2New(1, 0, 0, headerH)
+                    Content.Visible = true
+
+                    task.defer(function()
+                        local targetH = Section._OpenHeight
+                        if not targetH or targetH < headerH + 20 then
+                            -- force layout measure
+                            Sec.AutomaticSize = Enum.AutomaticSize.Y
+                            task.wait()
+                            targetH = math.max(Sec.AbsoluteSize.Y, headerH + 40)
+                            Sec.AutomaticSize = Enum.AutomaticSize.None
+                            Sec.Size = UDim2New(1, 0, 0, headerH)
+                        end
+
+                        local sizeTween = TweenService:Create(Sec, ti, { Size = UDim2New(1, 0, 0, targetH) })
+                        sizeTween:Play()
+
+                        pcall(function()
+                            TweenService:Create(Bg, ti, { BackgroundTransparency = 0.65 }):Play()
+                        end)
+
+                        -- Restore text/image transparencies via theme defaults
+                        for _, d in ipairs(Content:GetDescendants()) do
+                            pcall(function()
+                                if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+                                    TweenService:Create(d, ti, { TextTransparency = 0 }):Play()
+                                elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
+                                    TweenService:Create(d, ti, { ImageTransparency = 0 }):Play()
+                                end
+                            end)
+                        end
+
+                        sizeTween.Completed:Connect(function()
+                            Sec.AutomaticSize = Enum.AutomaticSize.Y
+                            Sec.Size = UDim2New(1, 0, 0, 45)
+                            Bg.ClipsDescendants = false
+                            Section._Animating = false
+                        end)
+                    end)
                 end
             end
 
