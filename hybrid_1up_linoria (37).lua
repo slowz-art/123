@@ -6004,7 +6004,7 @@ local Library do
                 Items = Data.Items or Data.items or { "One", "Two", "Three" },
                 Default = Data.Default or Data.default or nil,
                 Callback = Data.Callback or Data.callback or function() end,
-                Size = Data.Size or Data.size or 170,
+                Size = Data.Size or Data.size or 110,
                 OptionHolderSize = Data.OptionHolderSize or Data.optionholder or 160,
                 Multi = Data.Multi or Data.multi or false,
 
@@ -6019,7 +6019,7 @@ local Library do
                     Parent = Dropdown.Section.Items["Content"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 32),
+                    Size = UDim2New(1, 0, 0, 28),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -6034,14 +6034,14 @@ local Library do
                     TextTransparency = 0.30000001192092896,
                     Text = Dropdown.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
-                    Size = UDim2New(0, 0, 0, 18),
+                    Size = UDim2New(0, 0, 0, 16),
                     AnchorPoint = Vector2New(0, 0.5),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 15,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6052,13 +6052,13 @@ local Library do
                     TextColor3 = FromRGB(0, 0, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
-                    Size = UDim2New(0, Dropdown.Size or 170, 0, 32),
+                    Size = UDim2New(0, Dropdown.Size or 110, 0, 28),
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0),
                     Position = UDim2New(1, 0, 0, 0),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 15,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -6242,8 +6242,16 @@ local Library do
                     end)
                     
                     RenderStepped = RunService.RenderStepped:Connect(function()
-                        Items["OptionHolder"].Instance.Position = UDim2New(0, Items["RealDropdown"].Instance.AbsolutePosition.X, 0, Items["RealDropdown"].Instance.AbsolutePosition.Y + Items["RealDropdown"].Instance.AbsoluteSize.Y + 5)
-                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, Dropdown.OptionHolderSize)
+                        local btn = Items["RealDropdown"].Instance
+                        -- Open list stays large; closed button stays compact
+                        local openW = math.max(btn.AbsoluteSize.X, 180)
+                        local openH = Dropdown.OptionHolderSize
+                        -- Align to right edge of the small button so it grows left
+                        Items["OptionHolder"].Instance.Size = UDim2New(0, openW, 0, openH)
+                        Items["OptionHolder"].Instance.Position = UDim2New(
+                            0, btn.AbsolutePosition.X + btn.AbsoluteSize.X - openW,
+                            0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5
+                        )
                     end)
 
                     for Index, Value in Library.OpenFrames do 
