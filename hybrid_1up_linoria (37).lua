@@ -3514,42 +3514,89 @@ local Library do
                 end
 
                 Window.IsOpen = Bool
+                Debounce = true
 
-                Debounce = true 
+                local Main = Items["MainFrame"].Instance
+                local animTime = 0.32
+                local slideOffset = 40
+                local style = Enum.EasingStyle.Quint
+                local dirOut = Enum.EasingDirection.Out
+                local dirIn = Enum.EasingDirection.In
 
-                if Window.IsOpen then 
-                    Items["MainFrame"].Instance.Visible = true 
+                -- Remember resting position once
+                if not Window._RestPos then
+                    Window._RestPos = Main.Position
                 end
+                local rest = Window._RestPos
 
-                local Descendants = Items["MainFrame"].Instance:GetDescendants()
-                TableInsert(Descendants, Items["MainFrame"].Instance)
+                if Window.IsOpen then
+                    -- Open: slide down from above + fade in
+                    Main.Visible = true
+                    Main.Position = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
 
-                local NewTween
-
-                for Index, Value in Descendants do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then
-                        continue 
-                    end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
+                    local Descendants = Main:GetDescendants()
+                    TableInsert(Descendants, Main)
+                    for Index, Value in Descendants do
+                        local TransparencyProperty = Tween:GetProperty(Value)
+                        if not TransparencyProperty then
+                            continue
                         end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
+                        if type(TransparencyProperty) == "table" then
+                            for _, Property in TransparencyProperty do
+                                Tween:FadeItem(Value, Property, true, animTime)
+                            end
+                        else
+                            Tween:FadeItem(Value, TransparencyProperty, true, animTime)
+                        end
                     end
-                end
-                
-                if NewTween and NewTween.Tween then
-                    NewTween.Tween.Completed:Connect(function()
-                        Debounce = false 
-                        Items["MainFrame"].Instance.Visible = Window.IsOpen
+
+                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, style, dirOut), {
+                        Position = rest
+                    })
+                    posTween:Play()
+                    posTween.Completed:Connect(function()
+                        Debounce = false
                     end)
                 else
-                    Debounce = false
-                    Items["MainFrame"].Instance.Visible = Window.IsOpen
+                    -- Close: slide up + fade out (paid-ui style)
+                    local closePos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
+
+                    local Descendants = Main:GetDescendants()
+                    TableInsert(Descendants, Main)
+                    local NewTween
+                    for Index, Value in Descendants do
+                        local TransparencyProperty = Tween:GetProperty(Value)
+                        if not TransparencyProperty then
+                            continue
+                        end
+                        if type(TransparencyProperty) == "table" then
+                            for _, Property in TransparencyProperty do
+                                NewTween = Tween:FadeItem(Value, Property, false, animTime)
+                            end
+                        else
+                            NewTween = Tween:FadeItem(Value, TransparencyProperty, false, animTime)
+                        end
+                    end
+
+                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, style, dirIn), {
+                        Position = closePos
+                    })
+                    posTween:Play()
+                    posTween.Completed:Connect(function()
+                        Main.Visible = false
+                        Main.Position = rest
+                        Debounce = false
+                    end)
+
+                    if not NewTween or not NewTween.Tween then
+                        task.delay(animTime, function()
+                            if not Window.IsOpen then
+                                Main.Visible = false
+                                Main.Position = rest
+                            end
+                            Debounce = false
+                        end)
+                    end
                 end
             end
 
