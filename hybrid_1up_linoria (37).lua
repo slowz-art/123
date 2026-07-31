@@ -199,7 +199,7 @@ local Library do
             ["AccentGradient"] = FromRGB(0, 195, 255),   -- Slightly deeper blue accent
             ["Background 2"] = FromRGB(10, 10, 12),      -- Very dark gray
             ["Background"] = FromRGB(12, 12, 14),        -- Main near-black background
-            ["Text"] = FromRGB(235, 235, 235),           -- Slightly dimmed light text
+            ["Text"] = FromRGB(250, 250, 252),           -- Near-white readable text
             ["Outline"] = FromRGB(25, 25, 28),           -- Subtle outline, almost invisible
             ["Section Top"] = FromRGB(28, 27, 31),       -- Dark section header
             ["Section Background"] = FromRGB(10, 10, 12),-- Deep black section background
@@ -2085,7 +2085,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Name .. " ["..Key.."]",
                     Size = UDim2New(0, 0, 0, 15),
                     AnchorPoint = Vector2New(0, 0.5),
@@ -2165,7 +2165,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Data.Description,
                     Size = UDim2New(0, 0, 0, 15),
                     BorderSizePixel = 0,
@@ -3281,7 +3281,7 @@ local Library do
                         Name = "\0",
                         FontFace = Library.Font,
                         TextColor3 = FromRGB(240, 240, 240),
-                        TextTransparency = 0.30000001192092896,
+                        TextTransparency = 0.05,
                         Text = "Close",
                         AutomaticSize = Enum.AutomaticSize.X,
                         Size = UDim2New(0, 0, 0, 15),
@@ -4935,13 +4935,21 @@ local Library do
                 local ti = TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
                 local headerH = 55
 
+                -- IMPORTANT: only size/visibility — never touch descendant transparencies
+                -- (that was breaking sliders + text after reopen)
+
                 if not Section.IsActive then
-                    -- Collapse: fade content + slide height to header
+                    -- Collapse
                     Items["Fade"].Instance.Visible = false
                     Items["Gradient"].Instance.Enabled = false
                     Items["Toggle"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                     Items["Toggle"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-                    Items["Circle"]:Tween(nil, {AnchorPoint = Vector2New(0, 0.5), Position = UDim2New(0, 4, 0.5, 0), BackgroundColor3 = Library.Theme.Text, BackgroundTransparency = 0.6})
+                    Items["Circle"]:Tween(nil, {
+                        AnchorPoint = Vector2New(0, 0.5),
+                        Position = UDim2New(0, 4, 0.5, 0),
+                        BackgroundColor3 = Library.Theme.Text,
+                        BackgroundTransparency = 0.55
+                    })
 
                     local fullH = math.max(Sec.AbsoluteSize.Y, headerH)
                     Section._OpenHeight = fullH
@@ -4950,50 +4958,40 @@ local Library do
                     Sec.Size = UDim2New(1, 0, 0, fullH)
                     Bg.Visible = true
                     Bg.ClipsDescendants = true
-
-                    -- Fade content children
-                    for _, d in ipairs(Content:GetDescendants()) do
-                        pcall(function()
-                            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
-                                TweenService:Create(d, ti, { TextTransparency = 1, BackgroundTransparency = 1 }):Play()
-                            elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-                                TweenService:Create(d, ti, { ImageTransparency = 1, BackgroundTransparency = 1 }):Play()
-                            elseif d:IsA("Frame") or d:IsA("ScrollingFrame") then
-                                TweenService:Create(d, ti, { BackgroundTransparency = 1 }):Play()
-                            end
-                        end)
-                    end
-                    pcall(function()
-                        TweenService:Create(Bg, ti, { BackgroundTransparency = 1 }):Play()
-                    end)
+                    Content.Visible = true
 
                     local sizeTween = TweenService:Create(Sec, ti, { Size = UDim2New(1, 0, 0, headerH) })
                     sizeTween:Play()
                     sizeTween.Completed:Connect(function()
-                        Bg.Visible = false
+                        if not Section.IsActive then
+                            Bg.Visible = false
+                            Content.Visible = false
+                        end
                         Section._Animating = false
                     end)
                 else
-                    -- Expand: restore height + fade content in
+                    -- Expand
                     Items["Fade"].Instance.Visible = false
                     Items["Gradient"].Instance.Enabled = true
                     Items["Toggle"]:ChangeItemTheme({BackgroundColor3 = "Text"})
                     Items["Toggle"]:Tween(nil, {BackgroundColor3 = Library.Theme.Text})
-                    Items["Circle"]:Tween(nil, {AnchorPoint = Vector2New(1, 0.5), Position = UDim2New(1, -4, 0.5, 0), BackgroundColor3 = Library.Theme.Text, BackgroundTransparency = 0})
+                    Items["Circle"]:Tween(nil, {
+                        AnchorPoint = Vector2New(1, 0.5),
+                        Position = UDim2New(1, -4, 0.5, 0),
+                        BackgroundColor3 = Library.Theme.Text,
+                        BackgroundTransparency = 0
+                    })
 
                     Bg.Visible = true
+                    Content.Visible = true
                     Bg.ClipsDescendants = true
-                    Bg.BackgroundTransparency = 1
 
-                    -- Measure natural content height
                     Sec.AutomaticSize = Enum.AutomaticSize.None
                     Sec.Size = UDim2New(1, 0, 0, headerH)
-                    Content.Visible = true
 
                     task.defer(function()
                         local targetH = Section._OpenHeight
                         if not targetH or targetH < headerH + 20 then
-                            -- force layout measure
                             Sec.AutomaticSize = Enum.AutomaticSize.Y
                             task.wait()
                             targetH = math.max(Sec.AbsoluteSize.Y, headerH + 40)
@@ -5003,26 +5001,12 @@ local Library do
 
                         local sizeTween = TweenService:Create(Sec, ti, { Size = UDim2New(1, 0, 0, targetH) })
                         sizeTween:Play()
-
-                        pcall(function()
-                            TweenService:Create(Bg, ti, { BackgroundTransparency = 0.65 }):Play()
-                        end)
-
-                        -- Restore text/image transparencies via theme defaults
-                        for _, d in ipairs(Content:GetDescendants()) do
-                            pcall(function()
-                                if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
-                                    TweenService:Create(d, ti, { TextTransparency = 0 }):Play()
-                                elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-                                    TweenService:Create(d, ti, { ImageTransparency = 0 }):Play()
-                                end
-                            end)
-                        end
-
                         sizeTween.Completed:Connect(function()
-                            Sec.AutomaticSize = Enum.AutomaticSize.Y
-                            Sec.Size = UDim2New(1, 0, 0, 45)
-                            Bg.ClipsDescendants = false
+                            if Section.IsActive then
+                                Sec.AutomaticSize = Enum.AutomaticSize.Y
+                                Sec.Size = UDim2New(1, 0, 0, 45)
+                                Bg.ClipsDescendants = false
+                            end
                             Section._Animating = false
                         end)
                     end)
@@ -5149,7 +5133,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Toggle.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -5345,7 +5329,7 @@ local Library do
                         Name = "\0",
                         FontFace = Library.Font,
                         TextColor3 = FromRGB(240, 240, 240),
-                        TextTransparency = 0.30000001192092896,
+                        TextTransparency = 0.05,
                         Text = "Close",
                         AutomaticSize = Enum.AutomaticSize.X,
                         Size = UDim2New(0, 0, 0, 15),
@@ -5637,7 +5621,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Button.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -5752,7 +5736,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Slider.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -5829,7 +5813,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "+",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutoButtonColor = false,
@@ -5848,7 +5832,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "-",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutoButtonColor = false,
@@ -5867,7 +5851,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "50%",
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -6031,7 +6015,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Dropdown.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 16),
@@ -6073,7 +6057,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "-",
                     Size = UDim2New(1, -40, 0, 18),
                     AnchorPoint = Vector2New(0, 0.5),
@@ -6413,7 +6397,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Option,
                     Size = UDim2New(0, 0, 0, 18),
                     AnchorPoint = Vector2New(0, 0.5),
@@ -6629,7 +6613,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Label.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -6809,7 +6793,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "MouseButton2",
                     AutoButtonColor = false,
                     BorderColor3 = FromRGB(0, 0, 0),
@@ -6827,7 +6811,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Keybind.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
@@ -6889,7 +6873,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(0, 0, 0),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = "Toggle",
                     AutoButtonColor = false,
                     BorderColor3 = FromRGB(0, 0, 0),
@@ -7635,7 +7619,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
-                    TextTransparency = 0.30000001192092896,
+                    TextTransparency = 0.05,
                     Text = Option,
                     Size = UDim2New(0, 0, 0, 15),
                     AnchorPoint = Vector2New(0, 0.5),
