@@ -6532,19 +6532,58 @@ local Library do
             end
 
             function Dropdown:Remove(Option)
-                if Dropdown.Options[Option] then
-                    Dropdown.Options[Option].Button:Clean()
+                local opt = Dropdown.Options[Option]
+                if opt then
+                    pcall(function()
+                        if opt.Button and opt.Button.Instance then
+                            opt.Button.Instance:Destroy()
+                        elseif opt.Button and opt.Button.Clean then
+                            opt.Button:Clean()
+                        end
+                    end)
                     Dropdown.Options[Option] = nil
                 end
             end
 
             function Dropdown:Refresh(List)
-                for Index, Value in Dropdown.Options do 
-                    Dropdown:Remove(Value.Name)
+                List = type(List) == "table" and List or {}
+                local prev = Dropdown.Value
+
+                local oldNames = {}
+                for name in pairs(Dropdown.Options) do
+                    oldNames[#oldNames + 1] = name
+                end
+                for _, name in ipairs(oldNames) do
+                    Dropdown:Remove(name)
+                end
+                Dropdown.OptionsWithIndexes = {}
+                Dropdown.Items = List
+
+                for _, Value in ipairs(List) do
+                    if type(Value) == "string" or type(Value) == "number" then
+                        Dropdown:Add(tostring(Value))
+                    end
                 end
 
-                for Index, Value in List do 
-                    Dropdown:Add(Value)
+                local stillThere = false
+                if prev ~= nil and type(prev) ~= "table" then
+                    local prevStr = tostring(prev)
+                    for _, v in ipairs(List) do
+                        if tostring(v) == prevStr then
+                            stillThere = true
+                            break
+                        end
+                    end
+                end
+                if stillThere then
+                    Dropdown:Set(prev)
+                elseif #List > 0 then
+                    Dropdown:Set(tostring(List[1]))
+                else
+                    Dropdown.Value = nil
+                    if Items["Value"] and Items["Value"].Instance then
+                        Items["Value"].Instance.Text = "..."
+                    end
                 end
             end
 
@@ -7728,19 +7767,58 @@ local Library do
             end
 
             function Dropdown:Remove(Option)
-                if Dropdown.Options[Option] then
-                    Dropdown.Options[Option].Button:Clean()
+                local opt = Dropdown.Options[Option]
+                if opt then
+                    pcall(function()
+                        if opt.Button and opt.Button.Instance then
+                            opt.Button.Instance:Destroy()
+                        elseif opt.Button and opt.Button.Clean then
+                            opt.Button:Clean()
+                        end
+                    end)
                     Dropdown.Options[Option] = nil
                 end
             end
 
             function Dropdown:Refresh(List)
-                for Index, Value in Dropdown.Options do 
-                    Dropdown:Remove(Value.Name)
+                List = type(List) == "table" and List or {}
+                local prev = Dropdown.Value
+
+                local oldNames = {}
+                for name in pairs(Dropdown.Options) do
+                    oldNames[#oldNames + 1] = name
+                end
+                for _, name in ipairs(oldNames) do
+                    Dropdown:Remove(name)
+                end
+                Dropdown.OptionsWithIndexes = {}
+                Dropdown.Items = List
+
+                for _, Value in ipairs(List) do
+                    if type(Value) == "string" or type(Value) == "number" then
+                        Dropdown:Add(tostring(Value))
+                    end
                 end
 
-                for Index, Value in List do 
-                    Dropdown:Add(Value)
+                local stillThere = false
+                if prev ~= nil and type(prev) ~= "table" then
+                    local prevStr = tostring(prev)
+                    for _, v in ipairs(List) do
+                        if tostring(v) == prevStr then
+                            stillThere = true
+                            break
+                        end
+                    end
+                end
+                if stillThere then
+                    Dropdown:Set(prev)
+                elseif #List > 0 then
+                    Dropdown:Set(tostring(List[1]))
+                else
+                    Dropdown.Value = nil
+                    if Items["Value"] and Items["Value"].Instance then
+                        Items["Value"].Instance.Text = "..."
+                    end
                 end
             end
 
@@ -8290,6 +8368,58 @@ Library.Sections.ESPPreview = function(self, Data)
             skLine(L[1], L[2], L[3], L[4], 2)
         end
 
+        -- Weapon text (below distance)
+        Items["WeaponLabel"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 11,
+            TextColor3 = FromRGB(0, 200, 200),
+            Text = "AK-47",
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 0, 14),
+            Position = UDim2New(0, 0, 1, -34),
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+
+        -- Side flags (right of box)
+        Items["FlagLabel"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 10,
+            TextColor3 = FromRGB(255, 255, 255),
+            Text = "F\nW",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0, 24, 0, 40),
+            Position = UDim2New(0.71, 4, 0.14, 0),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Top,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+
+        -- Team-check badge (top-left of overlay)
+        Items["TeamBadge"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 10,
+            TextColor3 = FromRGB(80, 255, 120),
+            Text = "TEAM",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0, 40, 0, 14),
+            Position = UDim2New(0, 6, 0, 4),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+
 Preview.ESP = {
         Enabled = false,
         Box = false,
@@ -8301,6 +8431,9 @@ Preview.ESP = {
         Chams = false,
         Skeleton = false,
         Rainbow = false,
+        Weapons = false,
+        Flags = false,
+        TeamCheck = false,
     }
 
     function Preview:SetESP(Key, Value)
@@ -8308,6 +8441,7 @@ Preview.ESP = {
             Enabled = false, Box = false, Corner = false, Names = false,
             Health = false, HealthText = false, Distance = false,
             Chams = false, Skeleton = false, Rainbow = false,
+            Weapons = false, Flags = false, TeamCheck = false,
         }
 
         -- Accept full table or single key
@@ -8329,6 +8463,9 @@ Preview.ESP = {
             Cham = "Chams", Highlight = "Chams",
             Skel = "Skeleton", Bones = "Skeleton",
             Master = "Enabled", Enable = "Enabled",
+            Weapon = "Weapons", WeaponText = "Weapons",
+            Flag = "Flags", Inventory = "Flags",
+            Team = "TeamCheck", Teams = "TeamCheck",
         }
 
         for k, v in pairs(payload) do
@@ -8363,6 +8500,25 @@ Preview.ESP = {
         setVis(Items["HealthBarBg"], show and E.Health)
         setVis(Items["HealthText"], show and E.HealthText)
         setVis(Items["Skeleton"], show and E.Skeleton)
+        setVis(Items["WeaponLabel"], show and E.Weapons)
+        setVis(Items["FlagLabel"], show and E.Flags)
+        setVis(Items["TeamBadge"], show and E.TeamCheck)
+
+        -- Stack distance / weapon text so they don't overlap
+        if Items["DistLabel"] and Items["DistLabel"].Instance then
+            if show and E.Weapons and E.Distance then
+                Items["DistLabel"].Instance.Position = UDim2New(0, 0, 1, -18)
+                if Items["WeaponLabel"] and Items["WeaponLabel"].Instance then
+                    Items["WeaponLabel"].Instance.Position = UDim2New(0, 0, 1, -34)
+                end
+            elseif show and E.Weapons then
+                if Items["WeaponLabel"] and Items["WeaponLabel"].Instance then
+                    Items["WeaponLabel"].Instance.Position = UDim2New(0, 0, 1, -18)
+                end
+            elseif show and E.Distance then
+                Items["DistLabel"].Instance.Position = UDim2New(0, 0, 1, -18)
+            end
+        end
 
         if Items["Overlay"] and Items["Overlay"].Instance then
             Items["Overlay"].Instance.Visible = true
@@ -8420,6 +8576,15 @@ Preview.ESP = {
         end
         if Items["NameLabel"] and Items["NameLabel"].Instance then
             Items["NameLabel"].Instance.TextColor3 = col
+        end
+        if Items["DistLabel"] and Items["DistLabel"].Instance and show and E.Rainbow then
+            Items["DistLabel"].Instance.TextColor3 = col
+        end
+        if Items["WeaponLabel"] and Items["WeaponLabel"].Instance then
+            Items["WeaponLabel"].Instance.TextColor3 = (show and E.Rainbow) and col or FromRGB(0, 200, 200)
+        end
+        if Items["FlagLabel"] and Items["FlagLabel"].Instance and show and E.Rainbow then
+            Items["FlagLabel"].Instance.TextColor3 = col
         end
     end
 
