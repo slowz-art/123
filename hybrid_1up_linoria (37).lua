@@ -8304,20 +8304,50 @@ Preview.ESP = {
     }
 
     function Preview:SetESP(Key, Value)
-        if type(Key) == "table" then
-            for k, v in pairs(Key) do
-                if Preview.ESP[k] ~= nil then
-                    Preview.ESP[k] = not not v
-                end
-            end
-        elseif type(Key) == "string" and Preview.ESP[Key] ~= nil then
-            Preview.ESP[Key] = not not Value
+        Preview.ESP = Preview.ESP or {
+            Enabled = false, Box = false, Corner = false, Names = false,
+            Health = false, HealthText = false, Distance = false,
+            Chams = false, Skeleton = false, Rainbow = false,
+        }
+
+        -- Accept full table or single key
+        local payload = Key
+        if type(Key) == "string" then
+            payload = { [Key] = Value }
         end
+        if type(payload) ~= "table" then
+            return
+        end
+
+        -- Alias map so scripts using different names still work
+        local aliases = {
+            Boxes = "Box", Bounding = "Box", Full = "Box",
+            BoxCorner = "Corner", Corners = "Corner",
+            Name = "Names", PlayerNames = "Names",
+            Healthbar = "Health", HealthBar = "Health",
+            Dist = "Distance", Distances = "Distance",
+            Cham = "Chams", Highlight = "Chams",
+            Skel = "Skeleton", Bones = "Skeleton",
+            Master = "Enabled", Enable = "Enabled",
+        }
+
+        for k, v in pairs(payload) do
+            local key = aliases[k] or k
+            if Preview.ESP[key] ~= nil then
+                Preview.ESP[key] = not not v
+            end
+        end
+
         Preview:RefreshESPOverlay()
+    end
+
+    function Preview:Update(payload)
+        return Preview:SetESP(payload)
     end
 
     function Preview:RefreshESPOverlay()
         local E = Preview.ESP or {}
+        -- Master must be on for any overlay to show
         local show = E.Enabled == true
 
         local function setVis(item, on)
@@ -8980,9 +9010,23 @@ function Library:_LinoriaBindGroupbox(Section)
     end
 
     function Section:AddESPPreview(Name)
+        local fn = rawget(getmetatable(self) or {}, "ESPPreview")
+            or (Library.Sections and Library.Sections.ESPPreview)
+            or self.ESPPreview
+        if type(fn) == "function" then
+            local ok, prev = pcall(fn, self, { Name = tostring(Name or "ESP Preview") })
+            if ok and prev then
+                return prev
+            end
+            if not ok then
+                warn("[AddESPPreview] error:", prev)
+            end
+        end
+        -- fallback direct call
         if type(self.ESPPreview) == "function" then
             return self:ESPPreview({ Name = tostring(Name or "ESP Preview") })
         end
+        warn("[AddESPPreview] ESPPreview not available on this groupbox")
         return nil
     end
 
