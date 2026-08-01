@@ -3743,12 +3743,14 @@ local Library do
             --]]
 
             function Window:Init()
-                for __, Value in Window.Pages do 
-                    if Value.Active then 
-                        for _, Value2 in Value.Sections do 
-                            task.spawn(function()
-                                Value2:TweenElements(true)
-                            end)
+                for __, Value in pairs(Window.Pages) do
+                    if type(Value) == "table" and Value.Active and Value.Sections then
+                        for _, Value2 in pairs(Value.Sections) do
+                            if type(Value2) == "table" and Value2.TweenElements then
+                                pcall(function()
+                                    Value2:TweenElements(true, true)
+                                end)
+                            end
                         end
                     end
                 end
@@ -3940,7 +3942,8 @@ local Library do
             end
 
             function Page:Turn(Bool)
-                -- Instant: Visible + tab highlight only. No reparent, no fades, no debounce.
+                -- Fast switch: no reparent, no descendant fades.
+                -- Still re-centers control text via TweenElements (that was the alignment).
                 if Page.Active == Bool then
                     return
                 end
@@ -3948,10 +3951,21 @@ local Library do
 
                 local pageInst = Items["Page"].Instance
                 pageInst.Visible = Bool == true
+                pageInst.Position = UDim2New(0, 0, 0, 0)
 
-                -- Tab button highlight (property set, no tween queue)
                 if Items["Inactive"] and Items["Inactive"].Instance then
                     Items["Inactive"].Instance.BackgroundTransparency = Bool and 0.25 or 1
+                end
+
+                -- Fix off-center labels/toggles when tab becomes active
+                if Bool then
+                    for _, Section in pairs(Page.Sections) do
+                        if type(Section) == "table" and Section.TweenElements then
+                            pcall(function()
+                                Section:TweenElements(true, true)
+                            end)
+                        end
+                    end
                 end
             end
 
@@ -3959,7 +3973,6 @@ local Library do
                 if Page.Active then
                     return
                 end
-                -- Only touch active page + this page (not every tab)
                 for _, Value in ipairs(Page.Window.Pages) do
                     if Value.Active and Value ~= Page then
                         Value:Turn(false)
@@ -4300,7 +4313,34 @@ local Library do
                 Items["Input"].Instance.Text = ""
             end
 
-            function GlobalChat:SendMessage(Avatar, Username, Message, IsLocalPlayer)
+            -- Normalize avatar so ImageLabels actually show a pfp
+                local function resolveAvatar(av)
+                    av = tostring(av or "")
+                    if av == "" then
+                        return "rbxassetid://0"
+                    end
+                    -- already good
+                    if av:find("rbxassetid://") or av:find("rbxthumb://") or av:find("rbxasset://") then
+                        return av
+                    end
+                    -- numeric id
+                    if av:match("^%d+$") then
+                        return "rbxthumb://type=AvatarHeadShot&id=" .. av .. "&w=150&h=150"
+                    end
+                    -- roblox headshot / thumbnail URLs → extract userId
+                    local uid = av:match("userId=(%d+)") or av:match("id=(%d+)")
+                    if uid then
+                        return "rbxthumb://type=AvatarHeadShot&id=" .. uid .. "&w=150&h=150"
+                    end
+                    -- plain asset number in path
+                    local asset = av:match("(%d%d%d%d%d+)")
+                    if asset and av:find("asset") then
+                        return "rbxassetid://" .. asset
+                    end
+                    return av
+                end
+                Avatar = resolveAvatar(Avatar)
+
                 local SubItems = { } do
                     if not IsLocalPlayer then
                         SubItems["Message1"] = Instances:Create("Frame", {
@@ -5485,13 +5525,14 @@ local Library do
             end
 
             function Toggle:RefreshPosition(Bool)
-                if Bool then 
-                    Items["Indicator"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 24, 0, 0)})
+                if Bool then
+                    -- Instant final layout (was 1s tween — left text off-center until done)
+                    Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
+                    Items["Text"].Instance.Position = UDim2New(0, 24, 0, 0)
                 else
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
                     Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
-                end 
+                end
             end
 
             Items["Toggle"]:Connect("InputBegan", function(Input)
@@ -5852,14 +5893,12 @@ local Library do
             end
 
             function Slider:RefreshPosition(Bool)
-                if Bool then 
-                    Items["RealSlider"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 20, 1, -3)})
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
-                   -- Items["Value"].Instance.TextTransparency = 0.3
+                if Bool then
+                    Items["RealSlider"].Instance.Position = UDim2New(0, 20, 1, -3)
+                    Items["Text"].Instance.Position = UDim2New(0, 0, 0, 0)
                 else
                     Items["RealSlider"].Instance.Position = UDim2New(0, 80, 1, -3)
                     Items["Text"].Instance.Position = UDim2New(0, 80, 0, 0)
-                   -- Items["Value"].Instance.TextTransparency = 1
                 end
             end
 
@@ -6135,8 +6174,8 @@ local Library do
 
             function Dropdown:RefreshPosition(Bool)
                 if Bool then
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0.5, 0)})
-                    Items["RealDropdown"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(1, 0, 0, 0)})
+                    Items["Text"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                    Items["RealDropdown"].Instance.Position = UDim2New(1, 0, 0, 0)
                 else
                     Items["Text"].Instance.Position = UDim2New(0, 30, 0.5, 0)
                     Items["RealDropdown"].Instance.Position = UDim2New(1, 30, 0, 0)
@@ -6641,19 +6680,19 @@ local Library do
             end
 
             function Label:RefreshPosition(Bool)
-                if Bool then 
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 5)})
-
+                if Bool then
+                    Items["Text"].Instance.Position = UDim2New(0, 0, 0, 5)
                     if Items["SubElements"] then
-                        Items["SubElements"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 30)})
-                        Tween:Create(Items["Label"].Instance:FindFirstChild("nig"), TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(1, -16, 1, -6)}, true)
+                        Items["SubElements"].Instance.Position = UDim2New(0, 0, 0, 30)
+                        local nig = Items["Label"].Instance:FindFirstChild("nig")
+                        if nig then nig.Position = UDim2New(1, -16, 1, -6) end
                     end
-                else 
+                else
                     Items["Text"].Instance.Position = UDim2New(0, 30, 0, 5)
-
                     if Items["SubElements"] then
-                        Items["SubElements"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 30, 0, 30)})
-                        Tween:Create(Items["Label"].Instance:FindFirstChild("nig"), TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(1, 30, 1, -6)}, true)
+                        Items["SubElements"].Instance.Position = UDim2New(0, 30, 0, 30)
+                        local nig = Items["Label"].Instance:FindFirstChild("nig")
+                        if nig then nig.Position = UDim2New(1, 30, 1, -6) end
                     end
                 end
             end
@@ -6949,10 +6988,10 @@ local Library do
             end
 
             function Keybind:RefreshPosition(Bool)
-                if Bool then 
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 5)})
-                    Items["SubElements"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 30)})
-                    Items["Modes"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(1, 0, 0, 0)})
+                if Bool then
+                    Items["Text"].Instance.Position = UDim2New(0, 0, 0, 5)
+                    Items["SubElements"].Instance.Position = UDim2New(0, 0, 0, 30)
+                    Items["Modes"].Instance.Position = UDim2New(1, 0, 0, 0)
                 else
                     Items["Text"].Instance.Position = UDim2New(0, 30, 0, 5)
                     Items["SubElements"].Instance.Position = UDim2New(0, 30, 0, 30)
@@ -7321,7 +7360,7 @@ local Library do
 
             function Textbox:RefreshPosition(Bool)
                 if Bool then
-                    Items["Background"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
+                    Items["Background"].Instance.Position = UDim2New(0, 0, 0, 0)
                 else
                     Items["Background"].Instance.Position = UDim2New(0, 30, 0, 0)
                 end
@@ -7516,9 +7555,9 @@ local Library do
 
             function Dropdown:RefreshPosition(Bool)
                 if Bool then
-                    Items["Background"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 30)})
-                    Items["Search"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
-                    Items["_"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 25)})
+                    Items["Background"].Instance.Position = UDim2New(0, 0, 0, 30)
+                    Items["Search"].Instance.Position = UDim2New(0, 0, 0, 0)
+                    Items["_"].Instance.Position = UDim2New(0, 0, 0, 25)
                 else
                     Items["Background"].Instance.Position = UDim2New(0, 30, 0, 30)
                     Items["Search"].Instance.Position = UDim2New(0, 30, 0, 0)
