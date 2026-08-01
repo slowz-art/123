@@ -3939,61 +3939,39 @@ local Library do
             local Debounce = false
 
             function Page:Turn(Bool)
-                if Debounce then 
-                    return 
+                if Debounce then
+                    return
                 end
 
-                Page.Active = Bool 
-                
+                -- Already on this page — no work
+                if Bool and Page.Active then
+                    return
+                end
+
+                Page.Active = Bool
                 Debounce = true
-                Items["Page"].Instance.Visible = Bool 
-                Items["Page"].Instance.Parent = Bool and Page.Window.Items["Content"].Instance or Library.UnusedHolder.Instance
 
-                if Page.Active then
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0.25})
-                    Items["Page"]:Tween(TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
+                local pageInst = Items["Page"].Instance
+                pageInst.Visible = Bool
+                pageInst.Parent = Bool and Page.Window.Items["Content"].Instance or Library.UnusedHolder.Instance
 
-                    for Index, Value in Page.Sections do 
-                        task.spawn(function()
-                            Value:TweenElements(true)
-                        end)
-                    end
+                -- Fast tab highlight only (no mass descendant fades — that caused lag)
+                if Bool then
+                    pageInst.Position = UDim2New(0, 0, 0, 0)
+                    Items["Inactive"]:Tween(
+                        TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        { BackgroundTransparency = 0.25 }
+                    )
                 else
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 1})
-                    Items["Page"]:Tween(TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 60)})
+                    Items["Inactive"]:Tween(
+                        TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        { BackgroundTransparency = 1 }
+                    )
                 end
 
-                local AllInstances = Items["Page"].Instance:GetDescendants()
-                TableInsert(AllInstances, Items["Page"].Instance)
-                
-                local NewTween 
-
-                for Index, Value in AllInstances do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then 
-                        continue
-                    end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                        end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
+                -- Unlock debounce next frame (no waiting on hundreds of tweens)
+                task.defer(function()
                     Debounce = false
-
-                    if not Page.Active then 
-                        for Index, Value in Page.Sections do 
-                            task.spawn(function()
-                                Value:TweenElements(false, true)
-                            end)   
-                        end
-                    end
                 end)
             end
 
@@ -5020,11 +4998,13 @@ local Library do
             end)
 
             function Section:TweenElements(Bool, Debounce)
+                -- No per-element waits — that lagged tab switches hard
                 for Index, Value in Section.Elements do
-                    Value:RefreshPosition(Bool)
-                    if not Debounce then 
-                        task.wait(0.03)
-                    end
+                    pcall(function()
+                        if Value and Value.RefreshPosition then
+                            Value:RefreshPosition(Bool)
+                        end
+                    end)
                 end
             end
 
@@ -8928,9 +8908,15 @@ function Library:_LinoriaBindGroupbox(Section)
         Info = type(Info) == "table" and Info or {}
         local Name = Info.Text or Info.Name or tostring(Idx)
 
+        -- Linoria Rounding = decimal places (0 = integers, 1 = step 0.1, 2 = 0.01)
+        -- 1up Slider.Decimals = actual step size
         local Decimals = Info.Decimals
-        if Decimals == nil and Info.Rounding ~= nil then
-            Decimals = (Info.Rounding <= 0) and 1 or (10 ^ Info.Rounding)
+        if Decimals == nil then
+            if Info.Rounding == nil or Info.Rounding <= 0 then
+                Decimals = 1
+            else
+                Decimals = 1 / (10 ^ Info.Rounding)
+            end
         end
 
         local Slider = self:Slider({
