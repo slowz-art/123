@@ -3544,54 +3544,37 @@ local Library do
             end
 
             function Window:SetOpen(Bool)
-                if Debounce then 
-                    return
-                end
-
-                Window.IsOpen = Bool
-                Debounce = true
+                Window.IsOpen = Bool == true
 
                 local Main = Items["MainFrame"].Instance
-                local animTime = 0.35
-                local slideOffset = 50
-
-                -- Use current position so dragging doesn't break reopen
-                if Main.Visible then
-                    Window._RestPos = Main.Position
-                elseif not Window._RestPos then
+                if not Window._RestPos then
                     Window._RestPos = Main.Position
                 end
-                local rest = Window._RestPos
+                if Main.Visible and Window.IsOpen then
+                    Window._RestPos = Main.Position
+                end
+                local rest = Window._RestPos or Main.Position
 
                 if Window.IsOpen then
-                    -- Open: slide down only (no transparency edits — theme stays intact)
+                    -- Force visible immediately so UI always pops (debounce was blocking re-open)
                     Main.Visible = true
-                    Main.Position = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
-
-                    local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                        Position = rest
-                    })
-                    posTween:Play()
-                    posTween.Completed:Connect(function()
-                        Debounce = false
+                    Main.BackgroundTransparency = math.min(Main.BackgroundTransparency, 0.12)
+                    pcall(function()
+                        if Library.Holder and Library.Holder.Instance then
+                            Library.Holder.Instance.Enabled = true
+                        end
                     end)
-                    task.delay(animTime + 0.05, function()
-                        Debounce = false
-                    end)
+                    Main.Position = rest
+                    Debounce = false
                 else
-                    -- Close: slide up only, then hide (no transparency edits)
+                    local animTime = 0.25
+                    local slideOffset = 50
                     local upPos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
+                    Debounce = true
                     local posTween = TweenService:Create(Main, TweenInfo.new(animTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                         Position = upPos
                     })
                     posTween:Play()
-                    posTween.Completed:Connect(function()
-                        if not Window.IsOpen then
-                            Main.Visible = false
-                            Main.Position = rest
-                        end
-                        Debounce = false
-                    end)
                     task.delay(animTime + 0.05, function()
                         if not Window.IsOpen then
                             Main.Visible = false
@@ -3762,9 +3745,20 @@ local Library do
                 end
             end)]]
 
-            Window:SetCenter()
-            task.wait()
-            Window:SetOpen(true)
+            pcall(function() Window:SetCenter() end)
+            pcall(function()
+                Items["MainFrame"].Instance.Visible = true
+                if Library.Holder and Library.Holder.Instance then
+                    Library.Holder.Instance.Enabled = true
+                end
+            end)
+            pcall(function() Window:SetOpen(true) end)
+            -- final failsafe: always show main frame
+            pcall(function()
+                Items["MainFrame"].Instance.Visible = true
+                Window.IsOpen = true
+            end)
+            Library.Window = Window
             return setmetatable(Window, Library)
         end
 
@@ -9701,6 +9695,19 @@ pcall(function()
         end
     end)
 end)
+
+
+function Library:SetOpen(Bool)
+    if Library.Window and Library.Window.SetOpen then
+        return Library.Window:SetOpen(Bool)
+    end
+    -- fallback: any window with Items.MainFrame
+    pcall(function()
+        if Library.Window and Library.Window.Items and Library.Window.Items.MainFrame then
+            Library.Window.Items.MainFrame.Instance.Visible = not not Bool
+        end
+    end)
+end
 
 getgenv().Library = Library
 return Library
