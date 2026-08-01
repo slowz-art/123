@@ -3874,15 +3874,18 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})      
                 
+                -- Stay under Content always — only Visible toggles (reparenting caused tab lag)
+                local contentParent = (Page.Window and Page.Window.Items and Page.Window.Items["Content"] and Page.Window.Items["Content"].Instance)
+                    or Library.UnusedHolder.Instance
                 Items["Page"] = Instances:Create("Frame", {
-                    Parent = Library.UnusedHolder.Instance,
+                    Parent = contentParent,
                     Name = "\0",
                     Visible = false,
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 1, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    Position = UDim2New(0, 0, 0, 60),
+                    Position = UDim2New(0, 0, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
@@ -3936,59 +3939,39 @@ local Library do
                 Page.Items = Items
             end
 
-            local Debounce = false
-
             function Page:Turn(Bool)
-                if Debounce then
+                -- Instant: Visible + tab highlight only. No reparent, no fades, no debounce.
+                if Page.Active == Bool then
                     return
                 end
-
-                -- Already on this page — no work
-                if Bool and Page.Active then
-                    return
-                end
-
                 Page.Active = Bool
-                Debounce = true
 
                 local pageInst = Items["Page"].Instance
-                pageInst.Visible = Bool
-                pageInst.Parent = Bool and Page.Window.Items["Content"].Instance or Library.UnusedHolder.Instance
+                pageInst.Visible = Bool == true
 
-                -- Fast tab highlight only (no mass descendant fades — that caused lag)
-                if Bool then
-                    pageInst.Position = UDim2New(0, 0, 0, 0)
-                    Items["Inactive"]:Tween(
-                        TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                        { BackgroundTransparency = 0.25 }
-                    )
-                else
-                    Items["Inactive"]:Tween(
-                        TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                        { BackgroundTransparency = 1 }
-                    )
+                -- Tab button highlight (property set, no tween queue)
+                if Items["Inactive"] and Items["Inactive"].Instance then
+                    Items["Inactive"].Instance.BackgroundTransparency = Bool and 0.25 or 1
                 end
-
-                -- Unlock debounce next frame (no waiting on hundreds of tweens)
-                task.defer(function()
-                    Debounce = false
-                end)
             end
 
             Items["Inactive"]:Connect("MouseButton1Down", function()
-                for Index, Value in Page.Window.Pages do 
-                    if Value == Page and Page.Active then
-                        return
-                    end
-
-                    Value:Turn(Value == Page)
+                if Page.Active then
+                    return
                 end
+                -- Only touch active page + this page (not every tab)
+                for _, Value in ipairs(Page.Window.Pages) do
+                    if Value.Active and Value ~= Page then
+                        Value:Turn(false)
+                    end
+                end
+                Page:Turn(true)
             end)
 
-            if #Page.Window.Pages == 0 then 
+            if #Page.Window.Pages == 0 then
                 Page:Turn(true)
             end
-            
+
             TableInsert(Page.Window.Pages, Page)
             return setmetatable(Page, Library.Pages)
         end
