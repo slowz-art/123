@@ -4300,34 +4300,7 @@ local Library do
                 Items["Input"].Instance.Text = ""
             end
 
-            -- Normalize avatar so ImageLabels actually show a pfp
-                local function resolveAvatar(av)
-                    av = tostring(av or "")
-                    if av == "" then
-                        return "rbxassetid://0"
-                    end
-                    -- already good
-                    if av:find("rbxassetid://") or av:find("rbxthumb://") or av:find("rbxasset://") then
-                        return av
-                    end
-                    -- numeric id
-                    if av:match("^%d+$") then
-                        return "rbxthumb://type=AvatarHeadShot&id=" .. av .. "&w=150&h=150"
-                    end
-                    -- roblox headshot / thumbnail URLs → extract userId
-                    local uid = av:match("userId=(%d+)") or av:match("id=(%d+)")
-                    if uid then
-                        return "rbxthumb://type=AvatarHeadShot&id=" .. uid .. "&w=150&h=150"
-                    end
-                    -- plain asset number in path
-                    local asset = av:match("(%d%d%d%d%d+)")
-                    if asset and av:find("asset") then
-                        return "rbxassetid://" .. asset
-                    end
-                    return av
-                end
-                Avatar = resolveAvatar(Avatar)
-
+            function GlobalChat:SendMessage(Avatar, Username, Message, IsLocalPlayer)
                 local SubItems = { } do
                     if not IsLocalPlayer then
                         SubItems["Message1"] = Instances:Create("Frame", {
