@@ -91,9 +91,9 @@ local Library do
         FadeSpeed = 0.2,
 
         Folders = {
-            Directory = "lyapossss",
-            Configs = "lyapossss/Configs",
-            Assets = "lyapossss/Assets",
+            Directory = "cfg",
+            Configs = "cfg/Configs",
+            Assets = "cfg/Assets",
         },
 
         -- Ignore below
@@ -701,62 +701,71 @@ local Library do
         Library.Font = SemiBold
     end
 
-    -- Hardened parent selection (gethui → CoreGui → PlayerGui)
-    local holderParent = nil
-    pcall(function() holderParent = gethui() end)
-    if not holderParent then pcall(function() holderParent = CoreGui end) end
-    if not holderParent then
-        pcall(function()
-            holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 5)
-        end)
-    end
-    if not holderParent then
-        holderParent = CoreGui -- final fallback
-    end
+    -- Lazy init (nothing parented to gethui/CoreGui until first window)
+    -- Same approach Radiance-style UIs use for max compatibility
+    Library.Holder = nil
+    Library.UnusedHolder = nil
+    Library.NotifHolder = nil
 
-    Library.Holder = Instances:Create("ScreenGui", {
-        Parent = holderParent,
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        ResetOnSpawn = false,
-        IgnoreGuiInset = true
-    })
+    Library._EnsureHolders = function()
+        if Library.Holder then return end
 
-    Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = holderParent,
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        Enabled = false,
-        ResetOnSpawn = false,
-        IgnoreGuiInset = true
-    })
+        local holderParent = nil
+        pcall(function() holderParent = gethui() end)
+        if not holderParent then pcall(function() holderParent = CoreGui end) end
+        if not holderParent then
+            pcall(function()
+                holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 5)
+            end)
+        end
+        if not holderParent then
+            holderParent = CoreGui
+        end
 
-    Library.NotifHolder  = Instances:Create("Frame", {
-        Parent = Library.Holder.Instance,
-        Name = "\0",
-        BackgroundTransparency = 1,
-        Size = UDim2New(0, 0, 1, 0),
-        BorderColor3 = FromRGB(0, 0, 0),
-        BorderSizePixel = 0,
-        AutomaticSize = Enum.AutomaticSize.X,
-        BackgroundColor3 = FromRGB(255, 255, 255)
-    })
-    
-    Instances:Create("UIListLayout", {
-        Parent = Library.NotifHolder.Instance,
-        Name = "\0",
-        Padding = UDimNew(0, 12),
-        SortOrder = Enum.SortOrder.LayoutOrder
-    })
-    
-    Instances:Create("UIPadding", {
-        Parent = Library.NotifHolder.Instance,
-        Name = "\0",
-        PaddingTop = UDimNew(0, 12),
-        PaddingBottom = UDimNew(0, 12),
-        PaddingRight = UDimNew(0, 12),
-        PaddingLeft = UDimNew(0, 12)
-    })    
+        Library.Holder = Instances:Create("ScreenGui", {
+            Parent = holderParent,
+            Name = "\0",
+            ZIndexBehavior = Enum.ZIndexBehavior.Global,
+            ResetOnSpawn = false,
+            IgnoreGuiInset = true
+        })
+
+        Library.UnusedHolder = Instances:Create("ScreenGui", {
+            Parent = holderParent,
+            Name = "\0",
+            ZIndexBehavior = Enum.ZIndexBehavior.Global,
+            Enabled = false,
+            ResetOnSpawn = false,
+            IgnoreGuiInset = true
+        })
+
+        Library.NotifHolder = Instances:Create("Frame", {
+            Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)(),
+            Name = "\0",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0, 0, 1, 0),
+            BorderColor3 = FromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            AutomaticSize = Enum.AutomaticSize.X,
+            BackgroundColor3 = FromRGB(255, 255, 255)
+        })
+
+        Instances:Create("UIListLayout", {
+            Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.NotifHolder and Library.NotifHolder.Instance end)(),
+            Name = "\0",
+            Padding = UDimNew(0, 12),
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+
+        Instances:Create("UIPadding", {
+            Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.NotifHolder and Library.NotifHolder.Instance end)(),
+            Name = "\0",
+            PaddingTop = UDimNew(0, 12),
+            PaddingBottom = UDimNew(0, 12),
+            PaddingRight = UDimNew(0, 12),
+            PaddingLeft = UDimNew(0, 12)
+        })
+    end    
 
     Library.Unload = function(self)
         -- Safe cleanup (never errors)
@@ -1077,6 +1086,7 @@ local Library do
 
     do 
         Library.CreateColorpicker = function(self, Data)
+            pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end)
             local Colorpicker = {
                 Flag = Data.Flag,
 
@@ -1172,7 +1182,7 @@ local Library do
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
                 Items["ColorpickerWindow"] = Instances:Create("TextButton", {
-                    Parent = Library.UnusedHolder.Instance,
+                    Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.UnusedHolder and Library.UnusedHolder.Instance end)(),
                     AutoButtonColor = false,
                     Text = "",
                     Name = "\0",
@@ -1574,7 +1584,7 @@ local Library do
 
                 if Colorpicker.IsOpen then 
                     Items["ColorpickerWindow"].Instance.Visible = true
-                    Items["ColorpickerWindow"].Instance.Parent = Library.Holder.Instance
+                    Items["ColorpickerWindow"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)()
                     
                     RenderStepped = RunService.RenderStepped:Connect(function()
                         Items["ColorpickerWindow"].Instance.Position = UDim2New(
@@ -1638,7 +1648,7 @@ local Library do
                     Debounce = false 
                     Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
                     task.wait(0.2)
-                    Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+                    Items["ColorpickerWindow"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance end)()
                 end)
             end
 
@@ -1875,7 +1885,7 @@ local Library do
 
             local Items = { } do 
                 Items["KeybindsList"] = Instances:Create("Frame", {
-                    Parent = Library.Holder.Instance,
+                    Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)(),
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0, 0.5),
@@ -2093,7 +2103,7 @@ local Library do
         Library.Notification = function(self, Data)
             local Items = { } do 
                 Items["Notification"] = Instances:Create("Frame", {
-                    Parent = Library.NotifHolder.Instance,
+                    Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.NotifHolder and Library.NotifHolder.Instance end)(),
                     Name = "\0",
                     BackgroundTransparency = 0.3499999940395355,
                     BorderColor3 = FromRGB(0, 0, 0),
@@ -2258,7 +2268,9 @@ local Library do
         end
 
         Library.Window = function(self, Data)
-            Data = Data or { }
+            
+        pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end)
+Data = Data or { }
 
             local Window = {
                 Name = Data.Name or Data.name or "Window",
@@ -2274,7 +2286,7 @@ local Library do
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
-                    Parent = Library.Holder.Instance,
+                    Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)(),
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
@@ -2514,7 +2526,7 @@ local Library do
 
                 if IsMobile then
                     Items["FloatingButton"] = Instances:Create("TextButton", {
-                        Parent = Library.Holder.Instance,
+                        Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)(),
                         Text = "",
                         AutoButtonColor = false,
                         Name = "\0",
@@ -3194,7 +3206,7 @@ local Library do
                 local SettingsItems = { }
                 do
                     SettingsItems["Settings"] = Instances:Create("Frame", {
-                        Parent = Library.UnusedHolder.Instance,
+                        Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.UnusedHolder and Library.UnusedHolder.Instance end)(),
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0.5, 0.5),
@@ -3360,7 +3372,7 @@ local Library do
                             end
     
                             SettingsItems["Settings"].Instance.Visible = true
-                            SettingsItems["Settings"].Instance.Parent = Library.Holder.Instance
+                            SettingsItems["Settings"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)()
                             SettingsItems["Settings"].Instance.ZIndex = 200
                             SettingsItems["Settings"].Instance.BackgroundTransparency = 0
                             SettingsItems["Settings"].Instance.ClipsDescendants = true
@@ -3429,7 +3441,7 @@ local Library do
                             Debounce = false 
                             SettingsItems["Settings"].Instance.Visible = Settings.IsOpen
                             task.wait(0.2)
-                            SettingsItems["Settings"].Instance.Parent = not Settings.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+                            SettingsItems["Settings"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return not Settings.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance end)()
                         end)
                     end
     
@@ -3644,7 +3656,7 @@ local Library do
 
                 TabItem:Connect("InputBegan", function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 then 
-                        TabItem.Instance.Parent = Library.Holder.Instance
+                        TabItem.Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)()
                         Window:UpdateHighlight(TabItem, true)
                         Items["PagePlaceholder"]:Tween(nil, {BackgroundTransparency = 0.3})
                         TabDragging = true 
@@ -5149,7 +5161,7 @@ local Library do
 
                 SettingsItem = { } do 
                     SettingsItem["Settings"] = Instances:Create("Frame", {
-                        Parent = Library.UnusedHolder.Instance,
+                        Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.UnusedHolder and Library.UnusedHolder.Instance end)(),
                         Name = "\0",
                         Visible = false,
                         BorderColor3 = FromRGB(0, 0, 0),
@@ -5315,7 +5327,7 @@ local Library do
                         end)
 
                         SettingsItem["Settings"].Instance.Visible = true
-                        SettingsItem["Settings"].Instance.Parent = Library.Holder.Instance
+                        SettingsItem["Settings"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)()
                         
                         RenderStepped = RunService.RenderStepped:Connect(function()
                             SettingsItem["Settings"].Instance.Position = UDim2New(
@@ -5375,7 +5387,7 @@ local Library do
                         Debounce = false 
                         SettingsItem["Settings"].Instance.Visible = Settings.IsOpen
                         task.wait(0.2)
-                        SettingsItem["Settings"].Instance.Parent = not Settings.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+                        SettingsItem["Settings"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return not Settings.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance end)()
                     end)
                 end
 
@@ -6050,7 +6062,7 @@ local Library do
                 end})
 
                 Items["OptionHolder"] = Instances:Create("TextButton", {
-                    Parent = Library.UnusedHolder.Instance,
+                    Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.UnusedHolder and Library.UnusedHolder.Instance end)(),
                     Text = "",
                     AutoButtonColor = false,
                     Name = "\0",
@@ -6152,7 +6164,7 @@ local Library do
 
                 if Dropdown.IsOpen then 
                     Items["OptionHolder"].Instance.Visible = true
-                    Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
+                    Items["OptionHolder"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return Library.Holder and Library.Holder.Instance end)()
 
                     Items["ArrowIcon"]:Tween(nil, {Rotation = 180, ImageColor3 = FromRGB(255, 255, 255)})
                     Items["Gradient"].Instance.Enabled = true
@@ -6237,7 +6249,7 @@ local Library do
                     Debounce = false 
                     Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
                     task.wait(0.2)
-                    Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+                    Items["OptionHolder"].Instance.Parent = (function() pcall(function() if Library._EnsureHolders then Library._EnsureHolders() end end) return not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance end)()
                 end)
             end
 
@@ -9199,6 +9211,7 @@ end
 ----------------------------------------------------------------------
 function Library:CreateWindow(Cfg)
     Cfg = type(Cfg) == "table" and Cfg or {}
+    pcall(function() Library._EnsureHolders() end)
 
     local Win = self:Window({
         Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
