@@ -1,40 +1,36 @@
 --[[
-    UI Library
+    1up UI Library — Linoria API
 
     Public API is Linoria:
       Library:CreateWindow → Window:AddTab → Tab:AddLeftGroupbox → AddToggle/AddSlider/...
       Tab:AddLeftTabbox → Tabbox:AddTab (Linoria-style tab strip)
 
-    extras:
+    1up visuals + extras kept:
       ESPPreview, GlobalChat, KeybindList, full 1up theme/tween, configs
 ]]
 
---
---
---
---
+-- Made by samet
+-- Join for high quality UI Commissions
+-- https://discord.gg/VhvTd5HV8d
+-- @joestar._3
 
 local Library do 
-    -- Stronger anti-detection (same methods used by high-compatibility UIs)
-    cloneref = cloneref or function(obj) return obj end
-
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
     local HttpService = game:GetService("HttpService")
     local RunService = game:GetService("RunService")
-    local CoreGui = cloneref(game:GetService("CoreGui"))
+    local CoreGui = cloneref and cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")
     local TweenService = game:GetService("TweenService")
     local Lighting = game:GetService("Lighting")
 
-    -- Robust gethui polyfill
     gethui = gethui or function()
         return CoreGui
     end
 
     local LocalPlayer = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
-    local Mouse = cloneref(LocalPlayer:GetMouse())
+    local Mouse = LocalPlayer:GetMouse()
 
     local FromRGB = Color3.fromRGB
     local FromHSV = Color3.fromHSV
@@ -91,9 +87,9 @@ local Library do
         FadeSpeed = 0.2,
 
         Folders = {
-            Directory = "cfg",
-            Configs = "cfg/Configs",
-            Assets = "cfg/Assets",
+            Directory = "lyapossss",
+            Configs = "lyapossss/Configs",
+            Assets = "lyapossss/Assets",
         },
 
         -- Ignore below
@@ -200,37 +196,26 @@ local Library do
 
     local Themes = {
         ["Preset"] = {
-            -- Radiance-style flat dark theme (less "1up" fingerprint)
-            ["AccentGradient"] = FromRGB(126, 192, 255),
-            ["Background 2"] = FromRGB(22, 22, 22),
-            ["Background"] = FromRGB(23, 23, 23),
-            ["Text"] = FromRGB(200, 200, 200),
-            ["Outline"] = FromRGB(35, 35, 35),
-            ["Section Top"] = FromRGB(22, 22, 22),
-            ["Section Background"] = FromRGB(21, 21, 21),
-            ["Section Background 2"] = FromRGB(22, 22, 22),
-            ["Accent"] = FromRGB(126, 192, 255),
-            ["Element"] = FromRGB(21, 21, 21),
-            -- extras mapped for compatibility
-            ["Outline 1"] = FromRGB(35, 35, 35),
-            ["Outline 2"] = FromRGB(30, 30, 30),
-            ["Outline 3"] = FromRGB(15, 15, 15),
-            ["Outline 4"] = FromRGB(10, 10, 10),
-            ["Inactive Text"] = FromRGB(135, 135, 135),
-            ["Hovered Element"] = FromRGB(35, 35, 35),
-            ["Inline"] = FromRGB(22, 22, 22),
-            ["Content"] = FromRGB(21, 21, 21),
+            ["AccentGradient"] = FromRGB(0, 195, 255),   -- Slightly deeper blue accent
+            ["Background 2"] = FromRGB(10, 10, 12),      -- Very dark gray
+            ["Background"] = FromRGB(12, 12, 14),        -- Main near-black background
+            ["Text"] = FromRGB(250, 250, 252),           -- Near-white readable text
+            ["Outline"] = FromRGB(25, 25, 28),           -- Subtle outline, almost invisible
+            ["Section Top"] = FromRGB(28, 27, 31),       -- Dark section header
+            ["Section Background"] = FromRGB(10, 10, 12),-- Deep black section background
+            ["Section Background 2"] = FromRGB(14, 14, 16),-- Alternate section, minimal difference
+            ["Accent"] = FromRGB(0, 116, 224),           -- Darker blue accent for consistency
+            ["Element"] = FromRGB(16, 16, 18)            -- Deep gray for UI elements
         }
     }
 
     Library.Theme = TableClone(Themes["Preset"])
 
-    -- Folders (fully protected)
+    -- Folders (safe if isfolder/makefolder missing)
     pcall(function()
-        if not isfolder or not makefolder then return end
-        for Index, Value in pairs(Library.Folders) do 
-            if not isfolder(Value) then
-                pcall(makefolder, Value)
+        for Index, Value in Library.Folders do 
+            if isfolder and not isfolder(Value) then
+                if makefolder then makefolder(Value) end
             end
         end
     end)
@@ -711,37 +696,30 @@ local Library do
         Library.Font = SemiBold
     end
 
-    -- Holders created immediately (same as Radiance - reliable)
     local holderParent = nil
     pcall(function() holderParent = gethui() end)
     if not holderParent then pcall(function() holderParent = CoreGui end) end
     if not holderParent then
-        pcall(function()
-            holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 5)
-        end)
-    end
-    if not holderParent then
-        holderParent = CoreGui
+        pcall(function() holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end)
     end
 
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = holderParent,
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        ResetOnSpawn = false,
-        IgnoreGuiInset = true
+        DisplayOrder = 2,
+        ResetOnSpawn = false
     })
 
     Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = holderParent,
+        Parent = holderParent or gethui(),
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         Enabled = false,
-        ResetOnSpawn = false,
-        IgnoreGuiInset = true
+        ResetOnSpawn = false
     })
 
-    Library.NotifHolder = Instances:Create("Frame", {
+    Library.NotifHolder  = Instances:Create("Frame", {
         Parent = Library.Holder.Instance,
         Name = "\0",
         BackgroundTransparency = 1,
@@ -751,14 +729,14 @@ local Library do
         AutomaticSize = Enum.AutomaticSize.X,
         BackgroundColor3 = FromRGB(255, 255, 255)
     })
-
+    
     Instances:Create("UIListLayout", {
         Parent = Library.NotifHolder.Instance,
         Name = "\0",
         Padding = UDimNew(0, 12),
         SortOrder = Enum.SortOrder.LayoutOrder
     })
-
+    
     Instances:Create("UIPadding", {
         Parent = Library.NotifHolder.Instance,
         Name = "\0",
@@ -766,55 +744,23 @@ local Library do
         PaddingBottom = UDimNew(0, 12),
         PaddingRight = UDimNew(0, 12),
         PaddingLeft = UDimNew(0, 12)
-    })
+    })    
 
     Library.Unload = function(self)
-        -- Safe cleanup (never errors)
-        pcall(function()
-            for Index, Value in self.Connections do 
-                if Value and Value.Connection then
-                    Value.Connection:Disconnect()
-                end
-            end
-        end)
+        for Index, Value in self.Connections do 
+            Value.Connection:Disconnect()
+        end
 
-        pcall(function()
-            for Index, Value in self.Threads do 
-                if Value then
-                    coroutine.close(Value)
-                end
-            end
-        end)
+        for Index, Value in self.Threads do 
+            coroutine.close(Value)
+        end
 
-        pcall(function()
-            if self.Holder and self.Holder.Clean then 
-                self.Holder:Clean()
-            elseif self.Holder and self.Holder.Instance then
-                self.Holder.Instance:Destroy()
-            end
-        end)
-
-        pcall(function()
-            if self.UnusedHolder and self.UnusedHolder.Instance then
-                self.UnusedHolder.Instance:Destroy()
-            end
-        end)
-
-        pcall(function()
-            if self.NotifHolder and self.NotifHolder.Instance then
-                self.NotifHolder.Instance:Destroy()
-            end
-        end)
+        if self.Holder then 
+            self.Holder:Clean()
+        end
 
         Library = nil 
         getgenv().Library = nil
-        getgenv().Linoria = nil
-        getgenv().Toggles = nil
-        getgenv().Options = nil
-        getgenv().Labels = nil
-        getgenv().Buttons = nil
-        getgenv().ThemeManager = nil
-        getgenv().SaveManager = nil
     end
 
     Library.GetImage = function(self, Image)
@@ -1065,10 +1011,82 @@ local Library do
         end
     end
 
-    -- Disabled: this creates Part in Camera + DepthOfField in Lighting
-    -- Radiance does NOT use this (major detection vector on most games)
     Library.MakeBlurred = function(self, Item, Window)
-        return -- no-op for maximum compatibility
+        Item = Item.Instance
+        local BlurItem = Item
+
+        local Part = Instances:Create("Part", {
+            Material = Enum.Material.Glass,
+            Transparency = 1,
+            Reflectance = 1,
+            CastShadow = false,
+            Anchored = true,
+            CanCollide = false,
+            CanQuery = false,
+            CollisionGroup = " ",
+            Size = Vector3New(1, 1, 1) * 0.01,
+            Color = FromRGB(0,0,0),
+            Parent = Camera
+        })
+            
+        local BlockMesh = Instances:Create("BlockMesh", {Parent = Part.Instance})
+
+        local DepthOfField = Instances:Create("DepthOfFieldEffect", {
+            Parent = Lighting,
+            Enabled = true,
+            FarIntensity = 0,
+            FocusDistance = 0,
+            InFocusRadius = 1000,
+            NearIntensity = 1,
+            Name = ""
+        })
+
+        Library:Connect(RunService.RenderStepped, function()
+            if Window.IsOpen then
+                if Item.Visible then
+                    DepthOfField:Tween(nil, {NearIntensity = 1})
+
+                    Part:Tween(nil, {Transparency = 0.97})
+                    Part:Tween(nil, {Size = Vector3New(1, 1, 1) * 0.01})
+
+                    local Corner0 = BlurItem.AbsolutePosition;
+                    local Corner1 = Corner0 + BlurItem.AbsoluteSize;
+                        
+                    local Ray0 = Camera.ScreenPointToRay(Camera, Corner0.X, Corner0.Y, 1);
+                    local Ray1 = Camera.ScreenPointToRay(Camera, Corner1.X, Corner1.Y, 1);
+
+                    local Origin = Camera.CFrame.Position + Camera.CFrame.LookVector * (0.05 - Camera.NearPlaneZ);
+
+                    local Normal = Camera.CFrame.LookVector;
+
+                    local Position0 = Library:GetCalculatedRayPosition(Origin, Normal, Ray0.Origin, Ray0.Direction)
+                    local Position1 = Library:GetCalculatedRayPosition(Origin, Normal, Ray1.Origin, Ray1.Direction)
+
+                    Position0 = Camera.CFrame:PointToObjectSpace(Position0)
+                    Position1 = Camera.CFrame:PointToObjectSpace(Position1)
+
+                    local Size = Position1 - Position0
+                    local Center = (Position0 + Position1) / 2
+
+                    BlockMesh.Instance.Offset = Center
+                    BlockMesh.Instance.Scale  = Size / 0.0101
+
+                    Part.Instance.CFrame = Camera.CFrame
+                else
+                    DepthOfField:Tween(nil, {NearIntensity = 0})
+
+                    --Part:Tween(nil, {Transparency = 1})
+                    BlockMesh.Instance.Offset = Vector3New(0, 0, 0)
+                    BlockMesh.Instance.Scale  = Vector3New(0, 0, 0)
+                end
+            else
+                DepthOfField:Tween(nil, {NearIntensity = 0})
+
+                --Part:Tween(nil, {Transparency = 1})
+                BlockMesh.Instance.Offset = Vector3New(0, 0, 0)
+                BlockMesh.Instance.Scale  = Vector3New(0, 0, 0)
+            end
+        end)
     end
 
     Library.EscapePattern = function(self, String)
@@ -1158,7 +1176,11 @@ local Library do
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Color"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Items["Text"] = Instances:Create("TextLabel", {
                     Parent = Items["ColorpickerButton"].Instance,
@@ -1190,7 +1212,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 25)
                 })  Items["ColorpickerWindow"]:AddToTheme({BackgroundColor3 = "Background"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["ColorpickerWindow"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 6)
+                })
                 
                 Items["Palette"] = Instances:Create("TextButton", {
                     Parent = Items["ColorpickerWindow"].Instance,
@@ -1222,7 +1248,11 @@ local Library do
                     Transparency = NumSequence{NumSequenceKeypoint(0, 1), NumSequenceKeypoint(1, 0)}
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Saturation"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Value"] = Instances:Create("Frame", {
                     Parent = Items["Palette"].Instance,
@@ -1240,9 +1270,17 @@ local Library do
                     Transparency = NumSequence{NumSequenceKeypoint(0, 1), NumSequenceKeypoint(1, 0)}
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Value"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Palette"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["PaletteDragger"] = Instances:Create("Frame", {
                     Parent = Items["Palette"].Instance,
@@ -1262,7 +1300,10 @@ local Library do
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["PaletteDragger"].Instance,
+                    Name = "\0"
+                })
                 
                 Items["Hue"] = Instances:Create("TextButton", {
                     Parent = Items["ColorpickerWindow"].Instance,
@@ -1280,7 +1321,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Hue"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Items["HueInline"] = Instances:Create("TextButton", {
                     Parent = Items["Hue"].Instance,
@@ -1296,7 +1341,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["HueInline"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Instances:Create("UIGradient", {
                     Parent = Items["HueInline"].Instance,
@@ -1315,7 +1364,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["HueDragger"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Items["Alpha"] = Instances:Create("TextButton", {
                     Parent = Items["ColorpickerWindow"].Instance,
@@ -1333,7 +1386,11 @@ local Library do
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Alpha"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Instances:Create("UIGradient", {
                     Parent = Items["Alpha"].Instance,
@@ -1352,7 +1409,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["AlphaDragger"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Items["SavedColors"] = Instances:Create("ScrollingFrame", {
                     Parent = Items["ColorpickerWindow"].Instance,
@@ -1433,7 +1494,11 @@ local Library do
                     BackgroundColor3 = FromRGB(30, 29, 31)
                 })  Items["HexLabel"]:AddToTheme({TextColor3 = "Text"})
                 
-                -- UICorner removed (Radiance-style sharp edges)                
+                Instances:Create("UICorner", {
+                    Parent = Items["HEXInput"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })                
             end
 
             function Colorpicker:Get()
@@ -1716,7 +1781,11 @@ local Library do
                         BackgroundColor3 = Color
                     })
                     
-                    -- UICorner removed (Radiance-style sharp edges)                
+                    Instances:Create("UICorner", {
+                        Parent = SavedColor.Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 6),
+                    })                
 
                     local UIStroke = Instances:Create("UIStroke", {
                         Parent = SavedColor.Instance,
@@ -1848,7 +1917,10 @@ local Library do
 
                 Items["KeybindsList"]:MakeDraggable()
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["KeybindsList"].Instance,
+                    Name = "\0"
+                })
                 
                 Items["Top"] = Instances:Create("Frame", {
                     Parent = Items["KeybindsList"].Instance,
@@ -1900,7 +1972,10 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Top"].Instance,
+                    Name = "\0"
+                })
                 
                 Instances:Create("Frame", {
                     Parent = Items["Top"].Instance,
@@ -2000,7 +2075,10 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = NewKeyAccent.Instance,
+                    Name = "\0"
+                })
                 
                 local NewKeyText = Instances:Create("TextLabel", {
                     Parent = NewKey.Instance,
@@ -2076,7 +2154,11 @@ local Library do
                     PaddingLeft = UDimNew(0, 8)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Notification"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Items["Description"] = Instances:Create("TextLabel", {
                     Parent = Items["Notification"].Instance,
@@ -2105,7 +2187,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Accent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Instances:Create("UIGradient", {
                     Parent = Items["Accent"].Instance,
@@ -2200,8 +2286,7 @@ local Library do
         end
 
         Library.Window = function(self, Data)
-            
-        Data = Data or { }
+            Data = Data or { }
 
             local Window = {
                 Name = Data.Name or Data.name or "Window",
@@ -2238,7 +2323,7 @@ local Library do
                 end
 
                 Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
-                pcall(function() end) -- MakeBlurred disabled
+                pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
@@ -2254,7 +2339,7 @@ local Library do
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
                 Items["LeftTabs"].Instance.ClipsDescendants = true
 
-                pcall(function() end) -- MakeBlurred disabled
+                pcall(function() Library:MakeBlurred(Items["LeftTabs"], Window) end)
 
                 local Gui = Items["MainFrame"].Instance
 
@@ -2520,7 +2605,10 @@ local Library do
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })
         
-                    -- UICorner removed (Radiance-style sharp edges) 
+                    Instances:Create("UICorner", {
+                        Parent = Items["FloatingButton"].Instance,
+                        CornerRadius = UDimNew(1, 0)
+                    }) 
 
                     Instances:Create("UIGradient", {
                         Parent = Items["FloatingLogo"].Instance,
@@ -2738,7 +2826,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["CloseButton"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 7)
+                })
                 
                 Items["CloseIcon"] = Instances:Create("ImageLabel", {
                     Parent = Items["CloseButton"].Instance,
@@ -2808,11 +2900,23 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["CloseIconAccent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 7)
+                })
 
-                -- UICorner removed (Radiance-style sharp edges)      
+                Instances:Create("UICorner", {
+                    Parent = Items["MainFrame"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })      
 
-                -- UICorner removed (Radiance-style sharp edges)      
+                Instances:Create("UICorner", {
+                    Parent = Items["LeftTabs"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })      
                 
                 do
                     Items["LeftBottomPixels"] = Instances:Create("Frame", {
@@ -3029,7 +3133,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["SettingsButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["SettingsButton"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 7)
+                })
                 
                 Items["SettingsIcon"] = Instances:Create("ImageLabel", {
                     Parent = Items["SettingsButton"].Instance,
@@ -3060,7 +3168,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["SettingsIconAccent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 7)
+                })
 
                 Instances:Create("UIGradient", {
                     Parent = Items["SettingsIconAccent"].Instance,
@@ -3135,7 +3247,11 @@ local Library do
                         BorderSizePixel = 0
                     }):AddToTheme({BackgroundColor3 = "Section Background 2"})
                     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItems["Settings"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 6)
+                    })
                     
                     SettingsItems["CloseButton"] = Instances:Create("TextButton", {
                         Parent = SettingsItems["Settings"].Instance,
@@ -3154,7 +3270,11 @@ local Library do
                         BackgroundColor3 = FromRGB(27, 26, 29)
                     }) SettingsItems["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
                     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItems["CloseButton"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4)
+                    })
                     
                     SettingsItems["Text"] = Instances:Create("TextLabel", {
                         Parent = SettingsItems["CloseButton"].Instance,
@@ -3229,9 +3349,17 @@ local Library do
                         return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                     end})
 
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItems["Accent"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4)
+                    })
     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItems["CloseButton"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4)
+                    })
 
                     SettingsItems["CloseButton"]:OnHover(function()
                         SettingsItems["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(1, 0, 1, 0), BackgroundTransparency = 0})
@@ -3689,7 +3817,11 @@ local Library do
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Accent"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Inactive"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Items.Gradient = Instances:Create("UIGradient", {
                     Parent = Items["Inactive"].Instance,
@@ -3870,7 +4002,11 @@ local Library do
 
                 Items["GlobalChat"]:MakeDraggable()
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["GlobalChat"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 6)
+                })
                 
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["GlobalChat"].Instance,
@@ -3922,7 +4058,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Message"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Message"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Background"] = Instances:Create("Frame", {
                     Parent = Items["Message"].Instance,
@@ -3936,7 +4076,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Background"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Background"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Input"] = Instances:Create("TextBox", {
                     Parent = Items["Background"].Instance,
@@ -3973,7 +4117,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["SendButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["SendButton"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["SendIcon"] = Instances:Create("ImageLabel", {
                     Parent = Items["SendButton"].Instance,
@@ -4003,7 +4151,11 @@ local Library do
                     Position = UDim2New(0.5, 0, 0.5, 0)
                 })  --Items["Accent"]:AddToTheme({BackgroundColor3 = "Accent"})
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Accent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
 
                 Instances:Create("UIGradient", {
                     Parent = Items["Accent"].Instance,
@@ -4096,7 +4248,11 @@ local Library do
                     SliceCenter = RectNew(Vector2New(21, 21), Vector2New(79, 79))
                 })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["StatusCircle"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
                 
                 Items["StatusText"] = Instances:Create("TextLabel", {
                     Parent = Items["Status"].Instance,
@@ -4202,7 +4358,11 @@ local Library do
                             MaxSize = Vector2New(370, 70)
                         })
 
-                        -- UICorner removed (Radiance-style sharp edges)
+                        Instances:Create("UICorner", {
+                            Parent = SubItems["RealMessage"].Instance,
+                            Name = "\0",
+                            CornerRadius = UDimNew(0, 4)
+                        })
 
                         SubItems["MessageText"] = Instances:Create("TextLabel", {
                             Parent = SubItems["RealMessage"].Instance,
@@ -4244,7 +4404,11 @@ local Library do
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })
 
-                        -- UICorner removed (Radiance-style sharp edges)
+                        Instances:Create("UICorner", {
+                            Parent = SubItems["Avatar"].Instance,
+                            Name = "\0",
+                            CornerRadius = UDimNew(0, 4)
+                        })
                     else
                         SubItems["Message1"] = Instances:Create("Frame", {
                             Parent = Items["Messages"].Instance,
@@ -4296,7 +4460,11 @@ local Library do
                             MaxSize = Vector2New(370, 75)
                         })
 
-                        -- UICorner removed (Radiance-style sharp edges)
+                        Instances:Create("UICorner", {
+                            Parent = SubItems["RealMessage"].Instance,
+                            Name = "\0",
+                            CornerRadius = UDimNew(0, 4)
+                        })
 
                         SubItems["MessageText"] = Instances:Create("TextLabel", {
                             Parent = SubItems["RealMessage"].Instance,
@@ -4338,7 +4506,11 @@ local Library do
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })
 
-                        -- UICorner removed (Radiance-style sharp edges)
+                        Instances:Create("UICorner", {
+                            Parent = SubItems["Avatar"].Instance,
+                            Name = "\0",
+                            CornerRadius = UDimNew(0, 4)
+                        })
                     end
                 end
             end
@@ -4465,7 +4637,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["TopBackground"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["TopBackground"].Instance,
@@ -4512,9 +4688,17 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Circle"]:AddToTheme({BackgroundColor3 = "Text"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Circle"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 99999)
+                })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Toggle"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 9)
+                })
                 
                 Items["Gradient"] = Instances:Create("UIGradient", {
                     Parent = Items["Toggle"].Instance,
@@ -4525,7 +4709,11 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Top"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Fill"] = Instances:Create("Frame", {
                     Parent = Items["Top"].Instance,
@@ -4539,7 +4727,11 @@ local Library do
                     BackgroundColor3 = FromRGB(26, 26, 30)
                 })  Items["Fill"]:AddToTheme({BackgroundColor3 = "Section Background"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Fill"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["TopFills"] = Instances:Create("Frame", {
                     Parent = Items["Top"].Instance,
@@ -4631,7 +4823,11 @@ local Library do
                     BackgroundColor3 = FromRGB(26, 26, 30)
                 })  Items["Left3"]:AddToTheme({BackgroundColor3 = "Section Background"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Section"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Background"] = Instances:Create("Frame", {
                     Parent = Items["Section"].Instance,
@@ -4678,7 +4874,11 @@ local Library do
                     BackgroundColor3 = FromRGB(24, 22, 25)
                 })  Items["Fade"]:AddToTheme({BackgroundColor3 = "Section Background"})
                 
-                -- UICorner removed (Radiance-style sharp edges)                
+                Instances:Create("UICorner", {
+                    Parent = Items["Fade"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })                
 
                 Instances:Create("UIPadding", {
                     Parent = Items["Content"].Instance,
@@ -4859,7 +5059,11 @@ local Library do
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 3)
+                })
                 
                 Items["Accent"] = Instances:Create("Frame", {
                     Parent = Items["Indicator"].Instance,
@@ -4873,7 +5077,11 @@ local Library do
                     Position = UDim2New(0.5, 0, 0.5, 0)
                 })  --Items["Accent"]:AddToTheme({BackgroundColor3 = "Accent"})
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Accent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 3)
+                })
 
                 Items["CheckImage"] = Instances:Create("ImageLabel", {
                     Parent = Items["Accent"].Instance,
@@ -4982,7 +5190,11 @@ local Library do
                         BackgroundColor3 = FromRGB(21, 21, 24)
                     })  SettingsItem["Settings"]:AddToTheme({BackgroundColor3 = "Background"})
 
-                    -- UICorner removed (Radiance-style sharp edges)                    
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItem["Settings"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 6)
+                    })                    
 
                     SettingsItem["SettingsIcon"] = Instances:Create("ImageLabel", {
                         Parent = Items["Text"].Instance,
@@ -5070,9 +5282,17 @@ local Library do
                         return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                     end})
     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItem["Accent"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4)
+                    })
                     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = SettingsItem["Button"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4)
+                    })
                     
                     SettingsItem["Text"] = Instances:Create("TextLabel", {
                         Parent = SettingsItem["Button"].Instance,
@@ -5355,9 +5575,17 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Accent"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Button"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Text"] = Instances:Create("TextLabel", {
                     Parent = Items["Button"].Instance,
@@ -5508,7 +5736,10 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealSlider"]:AddToTheme({BackgroundColor3 = "Element"})
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["RealSlider"].Instance,
+                    Name = "\0"
+                })
 
                 Items["Accent"] = Instances:Create("Frame", {
                     Parent = Items["RealSlider"].Instance,
@@ -5520,7 +5751,10 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  --Items["Accent"]:AddToTheme({BackgroundColor3 = "Accent"})
 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Accent"].Instance,
+                    Name = "\0"
+                })
 
                 Items["Icon"] = Instances:Create("ImageLabel", {
                     Parent = Items["Accent"].Instance,
@@ -5781,7 +6015,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["RealDropdown"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 6)
+                })
                 
                 Items["Value"] = Instances:Create("TextLabel", {
                     Parent = Items["RealDropdown"].Instance,
@@ -5859,7 +6097,11 @@ local Library do
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border
                 }):AddToTheme({Color = "Outline"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["OptionHolder"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Items["Holder"] = Instances:Create("ScrollingFrame", {
                     Parent = Items["OptionHolder"].Instance,
@@ -6114,7 +6356,10 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = OptionAccent.Instance,
+                    Name = "\0"
+                })
                 
                 local OptionText = Instances:Create("TextLabel", {
                     Parent = OptionAccent.Instance,
@@ -6445,7 +6690,11 @@ local Library do
                         BackgroundColor3 = FromRGB(27, 26, 29)
                     })  Items["SubElements"]:AddToTheme({BackgroundColor3 = "Element"})
                     
-                    -- UICorner removed (Radiance-style sharp edges)
+                    Instances:Create("UICorner", {
+                        Parent = Items["SubElements"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 5)
+                    })
                     
                     Instances:Create("UIListLayout", {
                         Parent = Items["SubElements"].Instance,
@@ -6526,7 +6775,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["SubElements"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["SubElements"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Instances:Create("UIListLayout", {
                     Parent = Items["SubElements"].Instance,
@@ -6591,7 +6844,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Modes"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Modes"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Items["Background"] = Instances:Create("Frame", {
                     Parent = Items["Modes"].Instance,
@@ -6604,7 +6861,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  --Items["Background"]:AddToTheme({BackgroundColor3 = "Accent"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Background"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
                 
                 Instances:Create("UIGradient", {
                     Parent = Items["Background"].Instance,
@@ -7011,7 +7272,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 }) 
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Textbox"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Background"] = Instances:Create("Frame", {
                     Parent = Items["Textbox"].Instance,
@@ -7026,7 +7291,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Background"]:AddToTheme({BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Background"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
                 
                 Items["Input"] = Instances:Create("TextBox", {
                     Parent = Items["Background"].Instance,
@@ -7155,7 +7424,11 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Search"]:AddToTheme({TextColor3 = "Text", BackgroundColor3 = "Element"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Search"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 6)
+                })
                 
                 Instances:Create("UIPadding", {
                     Parent = Items["Search"].Instance,
@@ -7193,7 +7466,11 @@ local Library do
                     CanvasSize = UDim2New(0, 0, 0, 0)
                 })  Items["Holder"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = Items["Background"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 6)
+                })
                 
                 Instances:Create("UIListLayout", {
                     Parent = Items["Holder"].Instance,
@@ -7340,7 +7617,10 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
                 
-                -- UICorner removed (Radiance-style sharp edges)
+                Instances:Create("UICorner", {
+                    Parent = OptionAccent.Instance,
+                    Name = "\0"
+                })
                 
                 local OptionText = Instances:Create("TextLabel", {
                     Parent = OptionButton.Instance,
@@ -7579,7 +7859,10 @@ Library.Sections.Tabbox = function(self, Data)
     })
     Box:AddToTheme({BackgroundColor3 = "Section Background 2"})
 
-    -- UICorner removed (Radiance-style sharp edges)
+    Instances:Create("UICorner", {
+        Parent = Box.Instance,
+        CornerRadius = UDimNew(0, 6)
+    })
 
     Instances:Create("UIStroke", {
         Parent = Box.Instance,
@@ -7671,7 +7954,10 @@ Library.Sections.Tabbox = function(self, Data)
         })
         Button:AddToTheme({BackgroundColor3 = "Element", TextColor3 = "Text"})
 
-        -- UICorner removed (Radiance-style sharp edges)
+        Instances:Create("UICorner", {
+            Parent = Button.Instance,
+            CornerRadius = UDimNew(0, 0),
+        })
 
         -- underline indicator for active tab
         local Underline = Instances:Create("Frame", {
@@ -7799,7 +8085,11 @@ Library.Sections.ESPPreview = function(self, Data)
         })
         Items["ESPPreview"]:AddToTheme({BackgroundColor3 = "Section Background 2"})
 
-        -- UICorner removed (Radiance-style sharp edges)
+        Instances:Create("UICorner", {
+            Parent = Items["ESPPreview"].Instance,
+            Name = "\0",
+            CornerRadius = UDimNew(0, 6)
+        })
 
         Instances:Create("UIStroke", {
             Parent = Items["ESPPreview"].Instance,
@@ -7847,7 +8137,11 @@ Library.Sections.ESPPreview = function(self, Data)
         })
         Items["Background"]:AddToTheme({BackgroundColor3 = "Element"})
 
-        -- UICorner removed (Radiance-style sharp edges)
+        Instances:Create("UICorner", {
+            Parent = Items["Background"].Instance,
+            Name = "\0",
+            CornerRadius = UDimNew(0, 5)
+        })
 
         Instances:Create("UIStroke", {
             Parent = Items["Background"].Instance,
@@ -8933,6 +9227,7 @@ end
 ----------------------------------------------------------------------
 function Library:CreateWindow(Cfg)
     Cfg = type(Cfg) == "table" and Cfg or {}
+
     local Win = self:Window({
         Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
         SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
@@ -9072,12 +9367,13 @@ do
     WMHolder.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
     WMHolder.Parent = parent
 
-    -- sharp edges (no UICorner) - Radiance style
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = WMHolder
+
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(35, 35, 35)
+    stroke.Color = Color3.fromRGB(25, 25, 28)
     stroke.Thickness = 1
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.LineJoinMode = Enum.LineJoinMode.Miter
     stroke.Parent = WMHolder
 
     local WMLabel = Instance.new("TextLabel")
