@@ -34,7 +34,7 @@ local Library do
 
     local LocalPlayer = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
-    local Mouse = LocalPlayer:GetMouse()
+    local Mouse = cloneref(LocalPlayer:GetMouse())
 
     local FromRGB = Color3.fromRGB
     local FromHSV = Color3.fromHSV
@@ -718,7 +718,6 @@ local Library do
         Parent = holderParent,
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        DisplayOrder = 2,
         ResetOnSpawn = false,
         IgnoreGuiInset = true
     })
@@ -1056,82 +1055,10 @@ local Library do
         end
     end
 
+    -- Disabled: this creates Part in Camera + DepthOfField in Lighting
+    -- Radiance does NOT use this (major detection vector on most games)
     Library.MakeBlurred = function(self, Item, Window)
-        Item = Item.Instance
-        local BlurItem = Item
-
-        local Part = Instances:Create("Part", {
-            Material = Enum.Material.Glass,
-            Transparency = 1,
-            Reflectance = 1,
-            CastShadow = false,
-            Anchored = true,
-            CanCollide = false,
-            CanQuery = false,
-            CollisionGroup = " ",
-            Size = Vector3New(1, 1, 1) * 0.01,
-            Color = FromRGB(0,0,0),
-            Parent = Camera
-        })
-            
-        local BlockMesh = Instances:Create("BlockMesh", {Parent = Part.Instance})
-
-        local DepthOfField = Instances:Create("DepthOfFieldEffect", {
-            Parent = Lighting,
-            Enabled = true,
-            FarIntensity = 0,
-            FocusDistance = 0,
-            InFocusRadius = 1000,
-            NearIntensity = 1,
-            Name = ""
-        })
-
-        Library:Connect(RunService.RenderStepped, function()
-            if Window.IsOpen then
-                if Item.Visible then
-                    DepthOfField:Tween(nil, {NearIntensity = 1})
-
-                    Part:Tween(nil, {Transparency = 0.97})
-                    Part:Tween(nil, {Size = Vector3New(1, 1, 1) * 0.01})
-
-                    local Corner0 = BlurItem.AbsolutePosition;
-                    local Corner1 = Corner0 + BlurItem.AbsoluteSize;
-                        
-                    local Ray0 = Camera.ScreenPointToRay(Camera, Corner0.X, Corner0.Y, 1);
-                    local Ray1 = Camera.ScreenPointToRay(Camera, Corner1.X, Corner1.Y, 1);
-
-                    local Origin = Camera.CFrame.Position + Camera.CFrame.LookVector * (0.05 - Camera.NearPlaneZ);
-
-                    local Normal = Camera.CFrame.LookVector;
-
-                    local Position0 = Library:GetCalculatedRayPosition(Origin, Normal, Ray0.Origin, Ray0.Direction)
-                    local Position1 = Library:GetCalculatedRayPosition(Origin, Normal, Ray1.Origin, Ray1.Direction)
-
-                    Position0 = Camera.CFrame:PointToObjectSpace(Position0)
-                    Position1 = Camera.CFrame:PointToObjectSpace(Position1)
-
-                    local Size = Position1 - Position0
-                    local Center = (Position0 + Position1) / 2
-
-                    BlockMesh.Instance.Offset = Center
-                    BlockMesh.Instance.Scale  = Size / 0.0101
-
-                    Part.Instance.CFrame = Camera.CFrame
-                else
-                    DepthOfField:Tween(nil, {NearIntensity = 0})
-
-                    --Part:Tween(nil, {Transparency = 1})
-                    BlockMesh.Instance.Offset = Vector3New(0, 0, 0)
-                    BlockMesh.Instance.Scale  = Vector3New(0, 0, 0)
-                end
-            else
-                DepthOfField:Tween(nil, {NearIntensity = 0})
-
-                --Part:Tween(nil, {Transparency = 1})
-                BlockMesh.Instance.Offset = Vector3New(0, 0, 0)
-                BlockMesh.Instance.Scale  = Vector3New(0, 0, 0)
-            end
-        end)
+        return -- no-op for maximum compatibility
     end
 
     Library.EscapePattern = function(self, String)
@@ -2368,7 +2295,7 @@ local Library do
                 end
 
                 Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
-                pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
+                pcall(function() end) -- MakeBlurred disabled
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
@@ -2384,7 +2311,7 @@ local Library do
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
                 Items["LeftTabs"].Instance.ClipsDescendants = true
 
-                pcall(function() Library:MakeBlurred(Items["LeftTabs"], Window) end)
+                pcall(function() end) -- MakeBlurred disabled
 
                 local Gui = Items["MainFrame"].Instance
 
