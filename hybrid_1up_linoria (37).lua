@@ -15,15 +15,19 @@
 -- @joestar._3
 
 local Library do 
+    -- Stronger anti-detection (same methods used by high-compatibility UIs)
+    cloneref = cloneref or function(obj) return obj end
+
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
     local HttpService = game:GetService("HttpService")
     local RunService = game:GetService("RunService")
-    local CoreGui = cloneref and cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")
+    local CoreGui = cloneref(game:GetService("CoreGui"))
     local TweenService = game:GetService("TweenService")
     local Lighting = game:GetService("Lighting")
 
+    -- Robust gethui polyfill
     gethui = gethui or function()
         return CoreGui
     end
@@ -211,11 +215,12 @@ local Library do
 
     Library.Theme = TableClone(Themes["Preset"])
 
-    -- Folders (safe if isfolder/makefolder missing)
+    -- Folders (fully protected)
     pcall(function()
-        for Index, Value in Library.Folders do 
-            if isfolder and not isfolder(Value) then
-                if makefolder then makefolder(Value) end
+        if not isfolder or not makefolder then return end
+        for Index, Value in pairs(Library.Folders) do 
+            if not isfolder(Value) then
+                pcall(makefolder, Value)
             end
         end
     end)
@@ -696,11 +701,17 @@ local Library do
         Library.Font = SemiBold
     end
 
+    -- Hardened parent selection (gethui → CoreGui → PlayerGui)
     local holderParent = nil
     pcall(function() holderParent = gethui() end)
     if not holderParent then pcall(function() holderParent = CoreGui end) end
     if not holderParent then
-        pcall(function() holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end)
+        pcall(function()
+            holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 5)
+        end)
+    end
+    if not holderParent then
+        holderParent = CoreGui -- final fallback
     end
 
     Library.Holder = Instances:Create("ScreenGui", {
@@ -708,15 +719,17 @@ local Library do
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 2,
-        ResetOnSpawn = false
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true
     })
 
     Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = holderParent or gethui(),
+        Parent = holderParent,
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         Enabled = false,
-        ResetOnSpawn = false
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true
     })
 
     Library.NotifHolder  = Instances:Create("Frame", {
@@ -747,20 +760,52 @@ local Library do
     })    
 
     Library.Unload = function(self)
-        for Index, Value in self.Connections do 
-            Value.Connection:Disconnect()
-        end
+        -- Safe cleanup (never errors)
+        pcall(function()
+            for Index, Value in self.Connections do 
+                if Value and Value.Connection then
+                    Value.Connection:Disconnect()
+                end
+            end
+        end)
 
-        for Index, Value in self.Threads do 
-            coroutine.close(Value)
-        end
+        pcall(function()
+            for Index, Value in self.Threads do 
+                if Value then
+                    coroutine.close(Value)
+                end
+            end
+        end)
 
-        if self.Holder then 
-            self.Holder:Clean()
-        end
+        pcall(function()
+            if self.Holder and self.Holder.Clean then 
+                self.Holder:Clean()
+            elseif self.Holder and self.Holder.Instance then
+                self.Holder.Instance:Destroy()
+            end
+        end)
+
+        pcall(function()
+            if self.UnusedHolder and self.UnusedHolder.Instance then
+                self.UnusedHolder.Instance:Destroy()
+            end
+        end)
+
+        pcall(function()
+            if self.NotifHolder and self.NotifHolder.Instance then
+                self.NotifHolder.Instance:Destroy()
+            end
+        end)
 
         Library = nil 
         getgenv().Library = nil
+        getgenv().Linoria = nil
+        getgenv().Toggles = nil
+        getgenv().Options = nil
+        getgenv().Labels = nil
+        getgenv().Buttons = nil
+        getgenv().ThemeManager = nil
+        getgenv().SaveManager = nil
     end
 
     Library.GetImage = function(self, Image)
