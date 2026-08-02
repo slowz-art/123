@@ -8888,6 +8888,39 @@ function Library:_LinoriaBindGroupbox(Section)
             end)
         end
 
+        -- Linoria: Toggle:AddColorPicker(flag, info)
+        function Toggle:AddColorPicker(Idx, Info)
+            Info = type(Info) == "table" and Info or {}
+            local ok, Cp = pcall(function()
+                if type(self.Colorpicker) == "function" then
+                    return self:Colorpicker({
+                        Flag = tostring(Idx),
+                        Default = Info.Default or Color3.fromRGB(255, 255, 255),
+                        Callback = Info.Callback or function() end,
+                        Alpha = Info.Transparency or Info.Alpha,
+                    })
+                end
+                -- fallback: section-level colorpicker
+                local Sec = self.Section
+                if Sec and type(Sec.Colorpicker) == "function" then
+                    return Sec:Colorpicker({
+                        Flag = tostring(Idx),
+                        Name = Info.Title or Info.Text or tostring(Idx),
+                        Default = Info.Default or Color3.fromRGB(255, 255, 255),
+                        Callback = Info.Callback or function() end,
+                        Alpha = Info.Transparency or Info.Alpha,
+                    })
+                end
+                return nil
+            end)
+            if not ok or type(Cp) ~= "table" then
+                Cp = { Type = "ColorPicker", Value = Info.Default }
+            end
+            Cp.Type = "ColorPicker"
+            Options[Idx] = Cp
+            return self -- chain stays on toggle
+        end
+
         Toggles[Idx] = Toggle
         return Toggle
     end
