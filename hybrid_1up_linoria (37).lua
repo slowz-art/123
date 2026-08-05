@@ -2318,13 +2318,11 @@ local Library do
                     Instances:Create("UIScale", {
                         Parent = Items["MainFrame"].Instance,
                         Name = "\0",
-                        Scale = 0.78
+                        Scale = 0.699999988079071
                     })                    
                 end
 
-                if not IsMobile then
-                    Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
-                end
+                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
                 pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
@@ -2345,40 +2343,44 @@ local Library do
 
                 local Gui = Items["MainFrame"].Instance
 
-                Window.Locked = false
                 local Dragging = false 
                 local DragStart
                 local StartPosition 
     
                 local Set = function(Input)
-                    if Window.Locked then return end
                     local DragDelta = Input.Position - DragStart
-                    local newPos = UDim2New(StartPosition.X.Scale, StartPosition.X.Offset + DragDelta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + DragDelta.Y)
-                    Items["MainFrame"]:Tween(TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = newPos})
-                    Window._RestPos = newPos
+                    Items["MainFrame"]:Tween(TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(StartPosition.X.Scale, StartPosition.X.Offset + DragDelta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + DragDelta.Y)})
                 end
     
-                local function BeginDrag(Input)
-                    if Window.Locked then return end
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    Dragging = true
-                    DragStart = Input.Position
-                    StartPosition = Gui.Position
-                    Input.Changed:Connect(function()
-                        if Input.UserInputState == Enum.UserInputState.End then
-                            Dragging = false
-                            if Gui and Gui.Parent then
-                                Window._RestPos = Gui.Position
+                Items["MainFrame"]:Connect("InputBegan", function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                        Dragging = true
+    
+                        DragStart = Input.Position
+                        StartPosition = Gui.Position
+    
+                        Input.Changed:Connect(function()
+                            if Input.UserInputState == Enum.UserInputState.End then
+                                Dragging = false
                             end
-                        end
-                    end)
-                end
+                        end)
+                    end
+                end)
 
-                Items["MainFrame"]:Connect("InputBegan", BeginDrag)
-                Items["LeftTabs"]:Connect("InputBegan", BeginDrag)
+                Items["LeftTabs"]:Connect("InputBegan", function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                        Dragging = true
+    
+                        DragStart = Input.Position
+                        StartPosition = Gui.Position
+    
+                        Input.Changed:Connect(function()
+                            if Input.UserInputState == Enum.UserInputState.End then
+                                Dragging = false
+                            end
+                        end)
+                    end
+                end)
 
                 -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
                 Window.SidebarCollapsed = false
@@ -3533,113 +3535,28 @@ local Library do
             
             local Debounce = false
 
-            -- Lock UI button (mobile only) — stops accidental drag while playing
-            if IsMobile then
-                local LockBtn = Instances:Create("TextButton", {
-                    Parent = Library.Holder.Instance,
-                    Name = "\0",
-                    Text = "",
-                    AutoButtonColor = false,
-                    Size = UDim2New(0, 48, 0, 48),
-                    Position = UDim2New(0, 12, 1, -120),
-                    AnchorPoint = Vector2New(0, 1),
-                    BackgroundTransparency = 0.25,
-                    BorderSizePixel = 0,
-                    ZIndex = 130,
-                    BackgroundColor3 = FromRGB(27, 25, 29),
-                })
-                LockBtn:AddToTheme({BackgroundColor3 = "Background"})
-                Instances:Create("UICorner", {
-                    Parent = LockBtn.Instance,
-                    CornerRadius = UDimNew(1, 0),
-                })
-                local LockIcon = Instances:Create("TextLabel", {
-                    Parent = LockBtn.Instance,
-                    Name = "\0",
-                    BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 1, 0),
-                    Text = "MOVE",
-                    TextSize = 11,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(240, 240, 240),
-                    ZIndex = 131,
-                    BorderSizePixel = 0,
-                })
-                LockIcon:AddToTheme({TextColor3 = "Text"})
-
-                local dragging, dragStart, startPos, moved
-                LockBtn:Connect("InputBegan", function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    dragging = true
-                    moved = false
-                    dragStart = Input.Position
-                    startPos = LockBtn.Instance.Position
-                    Input.Changed:Connect(function()
-                        if Input.UserInputState == Enum.UserInputState.End then
-                            dragging = false
-                            if not moved then
-                                Window.Locked = not Window.Locked
-                                LockIcon.Instance.Text = Window.Locked and "LOCK" or "MOVE"
-                                pcall(function()
-                                    Library:Notify(
-                                        Window.Locked and "UI Locked — drag disabled" or "UI Unlocked — drag enabled",
-                                        1.5,
-                                        "UI"
-                                    )
-                                end)
-                            end
-                        end
-                    end)
-                end)
-                Library:Connect(UserInputService.InputChanged, function(Input2)
-                    if not dragging then return end
-                    if Input2.UserInputType ~= Enum.UserInputType.MouseMovement
-                        and Input2.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    local delta = Input2.Position - dragStart
-                    if delta.Magnitude > 6 then moved = true end
-                    if moved then
-                        LockBtn.Instance.Position = UDim2New(
-                            startPos.X.Scale, startPos.X.Offset + delta.X,
-                            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-                        )
-                    end
-                end)
-
-                Items["LockButton"] = LockBtn
-                Window.LockButton = LockBtn
-            end
-
             function Window:SetCenter()
                 local CenterPosition = Items["MainFrame"].Instance.AbsolutePosition
                 task.wait()
                 Items["MainFrame"].Instance.AnchorPoint = Vector2New(0, 0)
 
                 Items["MainFrame"].Instance.Position = UDim2New(0, CenterPosition.X, 0, CenterPosition.Y)
-                Window._RestPos = Items["MainFrame"].Instance.Position
             end
 
             function Window:SetOpen(Bool)
-                local wantOpen = Bool == true
-                local Main = Items["MainFrame"].Instance
+                Window.IsOpen = Bool == true
 
-                -- Save current spot before hide so reopen is not centered
-                if Main.Visible then
-                    Window._RestPos = Main.Position
-                end
+                local Main = Items["MainFrame"].Instance
                 if not Window._RestPos then
                     Window._RestPos = Main.Position
                 end
-                local rest = Window._RestPos
+                if Main.Visible and Window.IsOpen then
+                    Window._RestPos = Main.Position
+                end
+                local rest = Window._RestPos or Main.Position
 
-                Window.IsOpen = wantOpen
-
-                if wantOpen then
-                    Main.Position = rest
+                if Window.IsOpen then
+                    -- Force visible immediately so UI always pops (debounce was blocking re-open)
                     Main.Visible = true
                     Main.BackgroundTransparency = math.min(Main.BackgroundTransparency, 0.12)
                     pcall(function()
@@ -3647,6 +3564,7 @@ local Library do
                             Library.Holder.Instance.Enabled = true
                         end
                     end)
+                    Main.Position = rest
                     Debounce = false
                 else
                     local animTime = 0.25
@@ -4745,15 +4663,15 @@ local Library do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Top"].Instance,
                     Name = "\0",
-                    Active = IsMobile and true or false,
+                    Active = false,
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Selectable = IsMobile and true or false,
+                    Selectable = false,
                     Position = UDim2New(1, -15, 0.5, 0),
-                    Size = IsMobile and UDim2New(0, 32, 0, 20) or UDim2New(0, 26, 0, 16),
-                    ZIndex = 3,
+                    Size = UDim2New(0, 26, 0, 16),
+                    ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  --Items["Toggle"]:AddToTheme({BackgroundColor3 = "Accent"})
@@ -5080,23 +4998,9 @@ local Library do
                 end
             end
 
-            -- PC: original MouseButton1Down only
-            -- Mobile: also Touch InputBegan (Active was false so touch never fired)
-            local _lastSectionToggle = 0
-            local function FireSectionToggle()
-                local now = os.clock()
-                if now - _lastSectionToggle < 0.15 then return end
-                _lastSectionToggle = now
+            Items["Toggle"]:Connect("MouseButton1Down", function()
                 Section:ToggleBackground()
-            end
-            Items["Toggle"]:Connect("MouseButton1Down", FireSectionToggle)
-            if IsMobile then
-                Items["Toggle"]:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.Touch then
-                        FireSectionToggle()
-                    end
-                end)
-            end
+            end)
 
             Section.Page.Sections[Section.Name] = Section
             table.insert(Section.Page.Sections, Section)
@@ -5129,64 +5033,31 @@ local Library do
             }
 
             local Items = { } do 
-                -- PC: original full-row TextButton. Mobile: Frame row + bigger checkbox hit only.
-                local boxSize = IsMobile and 26 or 18
-                local rowH = IsMobile and 26 or 18
-
-                if IsMobile then
-                    Items["Toggle"] = Instances:Create("Frame", {
-                        Parent = Toggle.Section.Items["Content"].Instance,
-                        Name = "\0",
-                        BackgroundTransparency = 1,
-                        BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, rowH),
-                        ZIndex = 2,
-                        BackgroundColor3 = FromRGB(255, 255, 255)
-                    })
-                else
-                    Items["Toggle"] = Instances:Create("TextButton", {
-                        Parent = Toggle.Section.Items["Content"].Instance,
-                        Name = "\0",
-                        FontFace = Library.Font,
-                        TextColor3 = FromRGB(0, 0, 0),
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        Text = "",
-                        AutoButtonColor = false,
-                        BackgroundTransparency = 1,
-                        BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, rowH),
-                        ZIndex = 2,
-                        TextSize = 14,
-                        BackgroundColor3 = FromRGB(255, 255, 255)
-                    })
-                end
+                Items["Toggle"] = Instances:Create("TextButton", {
+                    Parent = Toggle.Section.Items["Content"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    Size = UDim2New(1, 0, 0, 18),
+                    ZIndex = 2,
+                    TextSize = 14,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
                 
                 Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Size = UDim2New(0, boxSize, 0, boxSize),
+                    Size = UDim2New(0, 18, 0, 18),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
-
-                if IsMobile then
-                    Items["Hit"] = Instances:Create("TextButton", {
-                        Parent = Items["Indicator"].Instance,
-                        Name = "\0",
-                        Text = "",
-                        AutoButtonColor = false,
-                        Active = true,
-                        AnchorPoint = Vector2New(0.5, 0.5),
-                        Position = UDim2New(0.5, 0, 0.5, 0),
-                        Size = UDim2New(1, 10, 1, 10),
-                        BackgroundTransparency = 1,
-                        BorderSizePixel = 0,
-                        ZIndex = 5,
-                        BackgroundColor3 = FromRGB(255, 255, 255)
-                    })
-                end
                 
                 Instances:Create("UICorner", {
                     Parent = Items["Indicator"].Instance,
@@ -5256,15 +5127,12 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
-                local hoverTarget = IsMobile and Items["Indicator"] or Items["Toggle"]
-                local boxSize = IsMobile and 26 or 18
-                local hoverSize = IsMobile and 28 or 21
-                hoverTarget:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, hoverSize, 0, hoverSize), Position = UDim2New(0, IsMobile and -1 or -3, 0, IsMobile and -1 or -3)})
+                Items["Toggle"]:OnHover(function()
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -3, 0, -3)})
                 end)
 
-                hoverTarget:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, boxSize, 0, boxSize), Position = UDim2New(0, 0, 0, 0)})
+                Items["Toggle"]:OnHoverLeave(function()
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 18, 0, 18), Position = UDim2New(0, 0, 0, 0)})
                 end)
             end
 
@@ -5283,9 +5151,7 @@ local Library do
 
                 if Toggle.Value then 
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0, Size = UDim2New(1, 0, 1, 0)})
-                    local ck = IsMobile and 14 or 10
-                    local ck2 = IsMobile and 13 or 9
-                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, ck, 0, ck2)})
+                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 10, 0, 9)})
                 else
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.05, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
                     Items["CheckImage"]:Tween(nil, {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
@@ -5626,55 +5492,25 @@ local Library do
             end
 
             function Toggle:RefreshPosition(Bool)
-                local textOff = IsMobile and 32 or 24
-                local textOff2 = IsMobile and 92 or 84
                 if Bool then
+                    -- Instant final layout (was 1s tween — left text off-center until done)
                     Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
-                    if IsMobile then
-                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                        Items["Text"].Instance.Position = UDim2New(0, textOff, 0.5, 0)
-                    else
-                        Items["Text"].Instance.Position = UDim2New(0, textOff, 0, 0)
-                    end
+                    Items["Text"].Instance.Position = UDim2New(0, 24, 0, 0)
                 else
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-                    if IsMobile then
-                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                        Items["Text"].Instance.Position = UDim2New(0, textOff2, 0.5, 0)
-                    else
-                        Items["Text"].Instance.Position = UDim2New(0, textOff2, 0, 0)
-                    end
+                    Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
                 end
             end
 
-            if IsMobile then
-                -- Mobile: only the checkbox — scrolling over text won't flip toggles
-                local _lastToggleClick = 0
-                local function FlipToggle()
-                    local now = os.clock()
-                    if now - _lastToggleClick < 0.15 then return end
-                    _lastToggleClick = now
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
+                    if Items["SettingsIcon"] and Library:IsMouseOverFrame(Items["SettingsIcon"]) then
+                        return 
+                    end
+                    
                     Toggle:Set(not Toggle.Value)
                 end
-                if Items["Hit"] then
-                    Items["Hit"]:Connect("MouseButton1Click", FlipToggle)
-                    Items["Hit"]:Connect("InputBegan", function(Input)
-                        if Input.UserInputType == Enum.UserInputType.Touch then
-                            FlipToggle()
-                        end
-                    end)
-                end
-            else
-                -- PC: original — whole row is clickable
-                Items["Toggle"]:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
-                        if Items["SettingsIcon"] and Library:IsMouseOverFrame(Items["SettingsIcon"]) then
-                            return 
-                        end
-                        Toggle:Set(not Toggle.Value)
-                    end
-                end)
-            end
+            end)
 
             Toggle:Set(Toggle.Default, true)
 
