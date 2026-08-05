@@ -79,14 +79,19 @@ local Library do
             IsTablet = math.min(vs.X, vs.Y) >= 700
         end
     end)
-    -- Mobile/iPad: bigger text + control heights only (window size unchanged)
+    -- Mobile/iPad only: slight, proportional bump (desktop unchanged)
     local function MText(size)
         if not IsMobile then return size end
-        return math.floor((size or 14) * (IsTablet and 1.28 or 1.22) + 0.5)
+        size = tonumber(size) or 14
+        -- ~10–12% larger text — readable, still matches control size
+        local mul = IsTablet and 1.12 or 1.10
+        return math.max(size + 1, math.floor(size * mul + 0.5))
     end
     local function MHeight(h)
         if not IsMobile then return h end
-        return math.floor((h or 20) * (IsTablet and 1.25 or 1.2) + 0.5)
+        h = tonumber(h) or 20
+        local mul = IsTablet and 1.14 or 1.12
+        return math.max(h + 2, math.floor(h * mul + 0.5))
     end
 
     Library = {
@@ -5021,7 +5026,7 @@ local Library do
                 end
             end
 
-            -- Only the switch closes/opens the groupbox (not the title/name)
+            -- Classic on/off switch look — only the switch toggles (not the title)
             pcall(function()
                 if Items["Top"] and Items["Top"].Instance then
                     Items["Top"].Instance.Active = false
@@ -5033,8 +5038,29 @@ local Library do
                     Items["Title"].Instance.Active = false
                 end
             end)
-            Items["Toggle"].Instance.Active = true
-            Items["Toggle"].Instance.ZIndex = 6
+
+            -- Original switch visuals (on state)
+            pcall(function()
+                local sw = Items["Toggle"].Instance
+                sw.Active = true
+                sw.ZIndex = 6
+                sw.Size = UDim2New(0, 26, 0, 16)
+                Items["Toggle"]:AddToTheme({ BackgroundColor3 = "Accent" })
+                if Library.Theme and Library.Theme.Accent then
+                    sw.BackgroundColor3 = Library.Theme.Accent
+                end
+                if Items["Gradient"] and Items["Gradient"].Instance then
+                    Items["Gradient"].Instance.Enabled = true
+                end
+                if Items["Circle"] and Items["Circle"].Instance then
+                    local c = Items["Circle"].Instance
+                    c.AnchorPoint = Vector2New(1, 0.5)
+                    c.Position = UDim2New(1, -4, 0.5, 0)
+                    c.Size = UDim2New(0, 8, 0, 8)
+                    c.BackgroundTransparency = 0
+                end
+            end)
+
             Items["Toggle"]:Connect("MouseButton1Down", function()
                 Section:ToggleBackground()
             end)
