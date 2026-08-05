@@ -70,6 +70,15 @@ local Library do
     local RectNew = Rect.new
 
     local IsMobile = UserInputService.TouchEnabled or false
+    -- Treat large touch screens (iPad) same as mobile for scaling/hit targets
+    local IsTablet = false
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        if IsMobile and cam then
+            local vs = cam.ViewportSize
+            IsTablet = math.min(vs.X, vs.Y) >= 700
+        end
+    end)
 
     Library = {
         Theme =  { },
@@ -389,8 +398,13 @@ local Library do
             end
 
             if IsMobile then
+                -- Activated works reliably for touch + mouse on GuiButtons
                 if Event == "MouseButton1Down" or Event == "MouseButton1Click" then 
-                    Event = "TouchTap"
+                    if self.Instance:IsA("GuiButton") then
+                        Event = "Activated"
+                    else
+                        Event = "TouchTap"
+                    end
                 elseif Event == "MouseButton2Down" or Event == "MouseButton2Click" then 
                     Event = "TouchLongPress"
                 end
@@ -2315,11 +2329,15 @@ local Library do
                 })  Items["MainFrame"]:AddToTheme({BackgroundColor3 = "Background"})
 
                 if IsMobile then 
+                    -- Bigger UI + text on phone/iPad only (desktop unchanged)
+                    local mobileScale = IsTablet and 1.18 or 1.12
                     Instances:Create("UIScale", {
                         Parent = Items["MainFrame"].Instance,
                         Name = "\0",
-                        Scale = 0.699999988079071
-                    })                    
+                        Scale = mobileScale
+                    })
+                    -- Slightly larger base window so controls are easier to tap
+                    Items["MainFrame"].Instance.Size = UDim2New(0, IsTablet and 560 or 520, 0, IsTablet and 640 or 600)
                 end
 
                 Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
@@ -4663,15 +4681,15 @@ local Library do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Top"].Instance,
                     Name = "\0",
-                    Active = false,
+                    Active = true, -- required for mobile/iPad taps
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Selectable = false,
-                    Position = UDim2New(1, -15, 0.5, 0),
-                    Size = UDim2New(0, 26, 0, 16),
-                    ZIndex = 2,
+                    Selectable = true,
+                    Position = UDim2New(1, IsMobile and -12 or -15, 0.5, 0),
+                    Size = UDim2New(0, IsMobile and 44 or 26, 0, IsMobile and 28 or 16),
+                    ZIndex = 5,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  --Items["Toggle"]:AddToTheme({BackgroundColor3 = "Accent"})
@@ -5001,6 +5019,27 @@ local Library do
             Items["Toggle"]:Connect("MouseButton1Down", function()
                 Section:ToggleBackground()
             end)
+            -- Mobile/iPad: also tap header title area to collapse/expand (bigger hit target)
+            if IsMobile then
+                pcall(function()
+                    local top = Items["Top"].Instance
+                    if top and top:IsA("GuiObject") then
+                        top.Active = true
+                        top.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.Touch
+                                or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                -- ignore if they hit a child control that's not the header chrome
+                                Section:ToggleBackground()
+                            end
+                        end)
+                    end
+                end)
+                pcall(function()
+                    Items["Toggle"].Instance.Activated:Connect(function()
+                        Section:ToggleBackground()
+                    end)
+                end)
+            end
 
             Section.Page.Sections[Section.Name] = Section
             table.insert(Section.Page.Sections, Section)
@@ -6623,11 +6662,14 @@ local Library do
                     TextColor3 = FromRGB(240, 240, 240),
                     TextTransparency = 0.05,
                     Text = Label.Name,
-                    AutomaticSize = Enum.AutomaticSize.X,
-                    Size = UDim2New(0, 0, 0, 15),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    TextWrapped = true,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Top,
+                    Size = UDim2New(1, -12, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 30, 0, 5),
+                    Position = UDim2New(0, 6, 0, 4),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     TextSize = 14,
