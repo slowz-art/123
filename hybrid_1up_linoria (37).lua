@@ -79,6 +79,15 @@ local Library do
             IsTablet = math.min(vs.X, vs.Y) >= 700
         end
     end)
+    -- Mobile/iPad: bigger text + control heights only (window size unchanged)
+    local function MText(size)
+        if not IsMobile then return size end
+        return math.floor((size or 14) * (IsTablet and 1.28 or 1.22) + 0.5)
+    end
+    local function MHeight(h)
+        if not IsMobile then return h end
+        return math.floor((h or 20) * (IsTablet and 1.25 or 1.2) + 0.5)
+    end
 
     Library = {
         Theme =  { },
@@ -1982,7 +1991,7 @@ local Library do
                     Position = UDim2New(0, 45, 0.5, -1),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 15,
+                    TextSize = MText(15),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -2328,16 +2337,9 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["MainFrame"]:AddToTheme({BackgroundColor3 = "Background"})
 
-                if IsMobile then 
-                    -- Bigger UI + text on phone/iPad only (desktop unchanged)
-                    local mobileScale = IsTablet and 1.18 or 1.12
-                    Instances:Create("UIScale", {
-                        Parent = Items["MainFrame"].Instance,
-                        Name = "\0",
-                        Scale = mobileScale
-                    })
-                    -- Slightly larger base window so controls are easier to tap
-                    Items["MainFrame"].Instance.Size = UDim2New(0, IsTablet and 560 or 520, 0, IsTablet and 640 or 600)
+                if IsMobile then
+                    -- Keep window the same size as desktop (no UIScale shrink/grow)
+                    -- Text + button sizes are bumped separately for touch devices
                 end
 
                 Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
@@ -4681,18 +4683,21 @@ local Library do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Top"].Instance,
                     Name = "\0",
-                    Active = true, -- required for mobile/iPad taps
+                    Active = true, -- must be true for PC click + mobile tap
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Selectable = true,
-                    Position = UDim2New(1, IsMobile and -12 or -15, 0.5, 0),
-                    Size = UDim2New(0, IsMobile and 44 or 26, 0, IsMobile and 28 or 16),
-                    ZIndex = 5,
+                    Selectable = false,
+                    Position = UDim2New(1, -15, 0.5, 0),
+                    Size = UDim2New(0, 26, 0, 16),
+                    ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })  --Items["Toggle"]:AddToTheme({BackgroundColor3 = "Accent"})
+                })
+                pcall(function()
+                    Items["Toggle"]:AddToTheme({ BackgroundColor3 = "Accent" })
+                end)
                 
                 Items["Circle"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
@@ -5016,30 +5021,23 @@ local Library do
                 end
             end
 
+            -- Only the switch closes/opens the groupbox (not the title/name)
+            pcall(function()
+                if Items["Top"] and Items["Top"].Instance then
+                    Items["Top"].Instance.Active = false
+                end
+                if Items["TopBackground"] and Items["TopBackground"].Instance then
+                    Items["TopBackground"].Instance.Active = false
+                end
+                if Items["Title"] and Items["Title"].Instance then
+                    Items["Title"].Instance.Active = false
+                end
+            end)
+            Items["Toggle"].Instance.Active = true
+            Items["Toggle"].Instance.ZIndex = 6
             Items["Toggle"]:Connect("MouseButton1Down", function()
                 Section:ToggleBackground()
             end)
-            -- Mobile/iPad: also tap header title area to collapse/expand (bigger hit target)
-            if IsMobile then
-                pcall(function()
-                    local top = Items["Top"].Instance
-                    if top and top:IsA("GuiObject") then
-                        top.Active = true
-                        top.InputBegan:Connect(function(input)
-                            if input.UserInputType == Enum.UserInputType.Touch
-                                or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                -- ignore if they hit a child control that's not the header chrome
-                                Section:ToggleBackground()
-                            end
-                        end)
-                    end
-                end)
-                pcall(function()
-                    Items["Toggle"].Instance.Activated:Connect(function()
-                        Section:ToggleBackground()
-                    end)
-                end)
-            end
 
             Section.Page.Sections[Section.Name] = Section
             table.insert(Section.Page.Sections, Section)
@@ -5082,9 +5080,9 @@ local Library do
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 18),
+                    Size = UDim2New(1, 0, 0, MHeight(18)),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -5585,9 +5583,9 @@ local Library do
                     Text = "",
                     AutoButtonColor = false,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 32),
+                    Size = UDim2New(1, 0, 0, MHeight(32)),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Button"]:AddToTheme({BackgroundColor3 = "Element"})
 
@@ -5734,7 +5732,7 @@ local Library do
                     Parent = Slider.Section.Items["Content"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 35),
+                    Size = UDim2New(1, 0, 0, MHeight(35)),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -5754,7 +5752,7 @@ local Library do
                     BorderSizePixel = 0,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -5771,7 +5769,7 @@ local Library do
                     Position = UDim2New(0, 20, 1, -3),
                     Size = UDim2New(1, -40, 0, 7),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealSlider"]:AddToTheme({BackgroundColor3 = "Element"})
 
@@ -6011,7 +6009,7 @@ local Library do
                     Parent = Dropdown.Section.Items["Content"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 28),
+                    Size = UDim2New(1, 0, 0, MHeight(28)),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -6033,7 +6031,7 @@ local Library do
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6050,7 +6048,7 @@ local Library do
                     Position = UDim2New(1, 0, 0, 0),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -6076,7 +6074,7 @@ local Library do
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 15,
+                    TextSize = MText(15),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6672,7 +6670,7 @@ local Library do
                     Position = UDim2New(0, 6, 0, 4),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})          
             end
