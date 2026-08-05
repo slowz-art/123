@@ -83,15 +83,16 @@ local Library do
     local function MText(size)
         if not IsMobile then return size end
         size = tonumber(size) or 14
-        -- ~10–12% larger text — readable, still matches control size
-        local mul = IsTablet and 1.12 or 1.10
-        return math.max(size + 1, math.floor(size * mul + 0.5))
+        -- ~15–18% larger text on mobile — easier to read at a glance
+        local mul = IsTablet and 1.18 or 1.15
+        return math.max(size + 2, math.floor(size * mul + 0.5))
     end
     local function MHeight(h)
         if not IsMobile then return h end
         h = tonumber(h) or 20
-        local mul = IsTablet and 1.14 or 1.12
-        return math.max(h + 2, math.floor(h * mul + 0.5))
+        -- ~20–24% taller controls on mobile — bigger, easier tap targets
+        local mul = IsTablet and 1.24 or 1.20
+        return math.max(h + 4, math.floor(h * mul + 0.5))
     end
 
     Library = {
@@ -5099,6 +5100,11 @@ local Library do
                 Value = false
             }
 
+            -- iOS-style pill switch dimensions (mobile-scaled)
+            local TrackW, TrackH = MHeight(40), MHeight(22)
+            local KnobPad = 3
+            local KnobD = TrackH - (KnobPad * 2)
+
             local Items = { } do 
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Toggle.Section.Items["Content"].Instance,
@@ -5110,61 +5116,12 @@ local Library do
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, MHeight(18)),
+                    Size = UDim2New(1, 0, 0, MHeight(34)),
                     ZIndex = 2,
                     TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
-                
-                Items["Indicator"] = Instances:Create("Frame", {
-                    Parent = Items["Toggle"].Instance,
-                    Name = "\0",
-                    Size = UDim2New(0, 18, 0, 18),
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(124, 163, 255)
-                })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
-                
-                Instances:Create("UICorner", {
-                    Parent = Items["Indicator"].Instance,
-                    Name = "\0",
-                    CornerRadius = UDimNew(0, 3)
-                })
-                
-                Items["Accent"] = Instances:Create("Frame", {
-                    Parent = Items["Indicator"].Instance,
-                    Name = "\0",
-                    Size = UDim2New(0, 0, 0, 0),
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(255, 255, 255),
-                    AnchorPoint = Vector2New(0.5, 0.5),
-                    Position = UDim2New(0.5, 0, 0.5, 0)
-                })  --Items["Accent"]:AddToTheme({BackgroundColor3 = "Accent"})
 
-                Instances:Create("UICorner", {
-                    Parent = Items["Accent"].Instance,
-                    Name = "\0",
-                    CornerRadius = UDimNew(0, 3)
-                })
-
-                Items["CheckImage"] = Instances:Create("ImageLabel", {
-                    Parent = Items["Accent"].Instance,
-                    Name = "\0",
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 0, 0, 0),
-                    AnchorPoint = Vector2New(0.5, 0.5),
-                    Image = "rbxassetid://121760666525660",
-                    BackgroundTransparency = 1,
-                    Position = UDim2New(0.5, 0, 0.5, 0),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    ImageTransparency = 1,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["CheckImage"]:AddToTheme({ImageColor3 = "Text"})
-                
                 Items["Text"] = Instances:Create("TextLabel", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
@@ -5174,37 +5131,81 @@ local Library do
                     Text = Toggle.Name,
                     AutomaticSize = Enum.AutomaticSize.X,
                     Size = UDim2New(0, 0, 0, 15),
-                    Position = UDim2New(0, 24, 0, 0),
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Position = UDim2New(0, 0, 0.5, 0),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 14,
+                    TextSize = MText(14),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
-                Items["Gradient"] = Instances:Create("UIGradient", {
-                    Parent = Items["Accent"].Instance,
+                -- Track (the pill) — pinned to the right edge of the row
+                Items["Track"] = Instances:Create("Frame", {
+                    Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Enabled = true,
+                    AnchorPoint = Vector2New(1, 0.5),
+                    Position = UDim2New(1, 0, 0.5, 0),
+                    Size = UDim2New(0, TrackW, 0, TrackH),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    ZIndex = 2,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(60, 58, 64)
+                })  Items["Track"]:AddToTheme({BackgroundColor3 = "Element"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(0, 0, 0),
+                    Transparency = 0.7,
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Outline"})
+
+                Items["Gradient"] = Instances:Create("UIGradient", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    Enabled = false,
                     Rotation = -115,
                     Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(143, 143, 143))}
                 })  Items["Gradient"]:AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
+                -- Knob (the sliding circle)
+                Items["Knob"] = Instances:Create("Frame", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Position = UDim2New(0, KnobPad, 0.5, 0),
+                    Size = UDim2New(0, KnobD, 0, KnobD),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    ZIndex = 3,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Knob"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
+
                 Items["Toggle"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -3, 0, -3)})
+                    Items["Track"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, TrackW + 2, 0, TrackH + 2)})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 18, 0, 18), Position = UDim2New(0, 0, 0, 0)})
+                    Items["Track"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, TrackW, 0, TrackH)})
                 end)
             end
-
-            Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-            Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
 
             --Toggle.Section.Items["Fade"].Instance.Size = UDim2New(1, 0, 0, Toggle.Section.Items["Content"].Instance.AbsoluteSize.X - 180)
 
@@ -5217,11 +5218,15 @@ local Library do
                 Library.Flags[Toggle.Flag] = Value 
 
                 if Toggle.Value then 
-                    Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0, Size = UDim2New(1, 0, 1, 0)})
-                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 10, 0, 9)})
+                    Items["Track"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
+                    Items["Track"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = Library.Theme.Accent})
+                    Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2New(1, -(KnobD + KnobPad), 0.5, 0)})
+                    Items["Gradient"].Instance.Enabled = true
                 else
-                    Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.05, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
-                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
+                    Items["Track"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Track"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = Library.Theme.Element})
+                    Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2New(0, KnobPad, 0.5, 0)})
+                    Items["Gradient"].Instance.Enabled = false
                 end
 
                 -- Skip callback on initial Default apply so launch doesn't spam Notify
@@ -5559,14 +5564,9 @@ local Library do
             end
 
             function Toggle:RefreshPosition(Bool)
-                if Bool then
-                    -- Instant final layout (was 1s tween — left text off-center until done)
-                    Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 24, 0, 0)
-                else
-                    Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
-                end
+                -- Layout is fixed now: label pinned left, pill switch pinned right — nothing to slide
+                Items["Text"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                Items["Track"].Instance.Position = UDim2New(1, 0, 0.5, 0)
             end
 
             Items["Toggle"]:Connect("InputBegan", function(Input)
