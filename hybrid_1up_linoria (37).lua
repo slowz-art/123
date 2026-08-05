@@ -495,8 +495,7 @@ local Library do
             local StartPosition = nil 
             local StartSize = nil
             
-            -- Thicker grab edges on mobile so fingers can resize
-            local EdgeThickness = IsMobile and 14 or 4
+            local EdgeThickness = 2
 
             local MakeEdge = function(Name, Position, Size)
                 local Button = Instances:Create("TextButton", {
@@ -570,16 +569,14 @@ local Library do
 
             for Index, Value in Edges do 
                 Value.Button:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1
-                        or Input.UserInputType == Enum.UserInputType.Touch then
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                         BeginResizing(Value.Side)
                     end
                 end)
             end
 
             Library:Connect(UserInputService.InputEnded, function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1
-                    or Input.UserInputType == Enum.UserInputType.Touch then
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                     if Resizing then
                         EndResizing()
                     end
@@ -1139,7 +1136,7 @@ local Library do
                     BorderSizePixel = 0,
                     Size = UDim2New(0, 100, 0, 20),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -1198,7 +1195,7 @@ local Library do
                     Position = UDim2New(0, 25, 0, 2),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -1232,7 +1229,7 @@ local Library do
                     Position = UDim2New(0, 15, 0, 10),
                     Size = UDim2New(1, -31, 1, -159),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })
                 
@@ -1320,7 +1317,7 @@ local Library do
                     Position = UDim2New(0, 15, 1, -131),
                     Size = UDim2New(1, -31, 0, 6),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -1340,7 +1337,7 @@ local Library do
                     AutoButtonColor = false,
                     Size = UDim2New(1, 0, 1, 0),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -1385,7 +1382,7 @@ local Library do
                     Position = UDim2New(0, 15, 1, -107),
                     Size = UDim2New(1, -31, 0, 6),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })
                 
@@ -1470,7 +1467,7 @@ local Library do
                     Position = UDim2New(1, -8, 1, -8),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(30, 29, 31)
                 })  Items["HEXInput"]:AddToTheme({BackgroundColor3 = "Outline"})
 
@@ -1492,7 +1489,7 @@ local Library do
                     Size = UDim2New(0, 40, 0, 20),
                     Position = UDim2New(0, 10, 1, -8),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundTransparency = 1,
                     BackgroundColor3 = FromRGB(30, 29, 31)
                 })  Items["HexLabel"]:AddToTheme({TextColor3 = "Text"})
@@ -1778,7 +1775,7 @@ local Library do
                         AutoButtonColor = false,
                         Size = UDim2New(0, 200, 0, 50),
                         BorderSizePixel = 0,
-                        TextSize = 18,
+                        TextSize = 14,
                         BackgroundTransparency = 1,
                         ZIndex = 4,
                         BackgroundColor3 = Color
@@ -1971,7 +1968,7 @@ local Library do
                     Position = UDim2New(0, 45, 0.5, -1),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -2053,7 +2050,7 @@ local Library do
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 0, 20),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -2097,7 +2094,7 @@ local Library do
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  NewKeyText:AddToTheme({TextColor3 = "Text"})
 
@@ -2144,7 +2141,7 @@ local Library do
                     Size = UDim2New(0, 0, 0, 15),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.XY,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -2176,7 +2173,7 @@ local Library do
                     Position = UDim2New(0, 0, 0, 20),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.XY,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -2311,7 +2308,7 @@ local Library do
                     AnchorPoint = Vector2New(0.5, 0.5),
                     BackgroundTransparency = 0.12,
                     Position = UDim2New(0.5519999861717224, 0, 0.5, 0),
-                    Size = UDim2New(0, 540, 0, 640),
+                    Size = UDim2New(0, 480, 0, 580),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2325,7 +2322,9 @@ local Library do
                     })                    
                 end
 
-                -- resize disabled
+                if not IsMobile then
+                    Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
+                end
                 pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
@@ -2383,8 +2382,8 @@ local Library do
 
                 -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
                 Window.SidebarCollapsed = false
-                Window._SidebarExpandedWidth = 196
-                Window._SidebarCollapsedWidth = 80
+                Window._SidebarExpandedWidth = 180
+                Window._SidebarCollapsedWidth = 72
                 Window._SidebarHoverOpen = false
 
                 local function SetSidebarTabTexts(Visible)
@@ -2752,7 +2751,7 @@ local Library do
                         Position = Pos or UDim2New(0, 0, 0, 0),
                         BorderSizePixel = 0,
                         ZIndex = 4,
-                        TextSize = 18,
+                        TextSize = 15,
                         TextXAlignment = Enum.TextXAlignment.Center,
                         TextTruncate = Enum.TextTruncate.AtEnd,
                         BackgroundColor3 = FromRGB(255, 255, 255)
@@ -2821,7 +2820,7 @@ local Library do
                     Position = UDim2New(1, -14, 0, 11),
                     Size = UDim2New(0, 32, 0, 32),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -3128,7 +3127,7 @@ local Library do
                     Position = UDim2New(1, -56, 0, 11),
                     Size = UDim2New(0, 32, 0, 32),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["SettingsButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -3265,7 +3264,7 @@ local Library do
                         Position = UDim2New(0, 8, 1, -8),
                         Size = UDim2New(1, -16, 0, 32),
                         ZIndex = 2,
-                        TextSize = 18,
+                        TextSize = 14,
                         BackgroundColor3 = FromRGB(27, 26, 29)
                     }) SettingsItems["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
                     
@@ -3290,7 +3289,7 @@ local Library do
                         Position = UDim2New(0.5, 0, 0.5, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
-                        TextSize = 18,
+                        TextSize = 14,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })
                     
@@ -3534,15 +3533,15 @@ local Library do
             
             local Debounce = false
 
-            -- External Lock UI button (outside main window) — prevents accidental drag on mobile
-            do
+            -- Lock UI button (mobile only) — stops accidental drag while playing
+            if IsMobile then
                 local LockBtn = Instances:Create("TextButton", {
                     Parent = Library.Holder.Instance,
                     Name = "\0",
                     Text = "",
                     AutoButtonColor = false,
-                    Size = UDim2New(0, IsMobile and 48 or 40, 0, IsMobile and 48 or 40),
-                    Position = UDim2New(0, 12, 1, IsMobile and -120 or -100),
+                    Size = UDim2New(0, 48, 0, 48),
+                    Position = UDim2New(0, 12, 1, -120),
                     AnchorPoint = Vector2New(0, 1),
                     BackgroundTransparency = 0.25,
                     BorderSizePixel = 0,
@@ -3560,7 +3559,7 @@ local Library do
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 1, 0),
                     Text = "MOVE",
-                    TextSize = IsMobile and 11 or 10,
+                    TextSize = 11,
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(240, 240, 240),
                     ZIndex = 131,
@@ -3568,52 +3567,48 @@ local Library do
                 })
                 LockIcon:AddToTheme({TextColor3 = "Text"})
 
-                -- Draggable lock button (tap = toggle lock, drag = reposition)
-                do
-                    local dragging, dragStart, startPos, moved
-                    LockBtn:Connect("InputBegan", function(Input)
-                        if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                            and Input.UserInputType ~= Enum.UserInputType.Touch then
-                            return
-                        end
-                        dragging = true
-                        moved = false
-                        dragStart = Input.Position
-                        startPos = LockBtn.Instance.Position
-                        Input.Changed:Connect(function()
-                            if Input.UserInputState == Enum.UserInputState.End then
-                                dragging = false
-                                if not moved then
-                                    Window.Locked = not Window.Locked
-                                    LockIcon.Instance.Text = Window.Locked and "LOCK" or "MOVE"
-                                    LockIcon.Instance.TextSize = Window.Locked and (IsMobile and 11 or 10) or (IsMobile and 11 or 10)
-                                    pcall(function()
-                                        Library:Notify(
-                                            Window.Locked and "UI Locked — drag disabled" or "UI Unlocked — drag enabled",
-                                            1.5,
-                                            "UI"
-                                        )
-                                    end)
-                                end
+                local dragging, dragStart, startPos, moved
+                LockBtn:Connect("InputBegan", function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
+                    dragging = true
+                    moved = false
+                    dragStart = Input.Position
+                    startPos = LockBtn.Instance.Position
+                    Input.Changed:Connect(function()
+                        if Input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                            if not moved then
+                                Window.Locked = not Window.Locked
+                                LockIcon.Instance.Text = Window.Locked and "LOCK" or "MOVE"
+                                pcall(function()
+                                    Library:Notify(
+                                        Window.Locked and "UI Locked — drag disabled" or "UI Unlocked — drag enabled",
+                                        1.5,
+                                        "UI"
+                                    )
+                                end)
                             end
-                        end)
-                    end)
-                    Library:Connect(UserInputService.InputChanged, function(Input2)
-                        if not dragging then return end
-                        if Input2.UserInputType ~= Enum.UserInputType.MouseMovement
-                            and Input2.UserInputType ~= Enum.UserInputType.Touch then
-                            return
-                        end
-                        local delta = Input2.Position - dragStart
-                        if delta.Magnitude > 6 then moved = true end
-                        if moved then
-                            LockBtn.Instance.Position = UDim2New(
-                                startPos.X.Scale, startPos.X.Offset + delta.X,
-                                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-                            )
                         end
                     end)
-                end
+                end)
+                Library:Connect(UserInputService.InputChanged, function(Input2)
+                    if not dragging then return end
+                    if Input2.UserInputType ~= Enum.UserInputType.MouseMovement
+                        and Input2.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
+                    local delta = Input2.Position - dragStart
+                    if delta.Magnitude > 6 then moved = true end
+                    if moved then
+                        LockBtn.Instance.Position = UDim2New(
+                            startPos.X.Scale, startPos.X.Offset + delta.X,
+                            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                        )
+                    end
+                end)
 
                 Items["LockButton"] = LockBtn
                 Window.LockButton = LockBtn
@@ -3632,7 +3627,7 @@ local Library do
                 local wantOpen = Bool == true
                 local Main = Items["MainFrame"].Instance
 
-                -- Always remember where the UI currently is before we hide/move it
+                -- Save current spot before hide so reopen is not centered
                 if Main.Visible then
                     Window._RestPos = Main.Position
                 end
@@ -3644,7 +3639,6 @@ local Library do
                 Window.IsOpen = wantOpen
 
                 if wantOpen then
-                    -- Re-open at the exact place it was last hidden (not center)
                     Main.Position = rest
                     Main.Visible = true
                     Main.BackgroundTransparency = math.min(Main.BackgroundTransparency, 0.12)
@@ -3666,7 +3660,6 @@ local Library do
                     task.delay(animTime + 0.05, function()
                         if not Window.IsOpen then
                             Main.Visible = false
-                            -- keep stored rest so next open returns here
                             Main.Position = rest
                         end
                         Debounce = false
@@ -3867,7 +3860,7 @@ local Library do
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Category"]:AddToTheme({TextColor3 = "Text"})
             end                
@@ -3902,7 +3895,7 @@ local Library do
                     BorderSizePixel = 0,
                     Size = UDim2New(1, 0, 0, 40),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Accent"})
                 
@@ -3955,7 +3948,7 @@ local Library do
                     Position = UDim2New(0, 45, 0.5, 0),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})      
                 
@@ -4110,7 +4103,7 @@ local Library do
                     Position = UDim2New(0, 12, 0, 13),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 16,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -4128,7 +4121,7 @@ local Library do
                     Position = UDim2New(0, 14, 0, 30),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["SubTitle"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -4186,7 +4179,7 @@ local Library do
                     PlaceholderColor3 = FromRGB(185, 185, 185),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     PlaceholderText = "Message...",
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Input"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -4202,7 +4195,7 @@ local Library do
                     Position = UDim2New(1, -12, 1, -12),
                     Size = UDim2New(0, 32, 0, 32),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["SendButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -4356,7 +4349,7 @@ local Library do
                     Position = UDim2New(1, -20, 0.5, 0),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })                
             end
@@ -4426,7 +4419,7 @@ local Library do
                             BorderSizePixel = 0,
                             ZIndex = 2,
                             AutomaticSize = Enum.AutomaticSize.X,
-                            TextSize = 18,
+                            TextSize = 14,
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })  SubItems["PlayerName"]:AddToTheme({TextColor3 = "Text"})
 
@@ -4465,7 +4458,7 @@ local Library do
                             TextXAlignment = Enum.TextXAlignment.Left,
                             BorderSizePixel = 0,
                             AutomaticSize = Enum.AutomaticSize.XY,
-                            TextSize = 18,
+                            TextSize = 14,
                             ZIndex = 2,
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })  SubItems["MessageText"]:AddToTheme({TextColor3 = "Text"})
@@ -4527,7 +4520,7 @@ local Library do
                             Position = UDim2New(1, -38, 0, 0),
                             BorderSizePixel = 0,
                             AutomaticSize = Enum.AutomaticSize.X,
-                            TextSize = 18,
+                            TextSize = 14,
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })  SubItems["PlayerName"]:AddToTheme({TextColor3 = "Text"})
 
@@ -4568,7 +4561,7 @@ local Library do
                             AutomaticSize = Enum.AutomaticSize.XY,
                             ZIndex = 2,
                             TextWrapped = true,
-                            TextSize = 18,
+                            TextSize = 14,
                             BackgroundColor3 = FromRGB(255, 255, 255)
                         })  SubItems["MessageText"]:AddToTheme({TextColor3 = "Text"})
 
@@ -4722,7 +4715,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextTransparency = 0.4,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -4745,21 +4738,21 @@ local Library do
                     Position = UDim2New(0, 50, 0, 10),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
                 
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Top"].Instance,
                     Name = "\0",
-                    Active = true,
+                    Active = IsMobile and true or false,
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Selectable = true,
+                    Selectable = IsMobile and true or false,
                     Position = UDim2New(1, -15, 0.5, 0),
-                    Size = UDim2New(0, 32, 0, 20),
+                    Size = IsMobile and UDim2New(0, 32, 0, 20) or UDim2New(0, 26, 0, 16),
                     ZIndex = 3,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
@@ -5087,24 +5080,23 @@ local Library do
                 end
             end
 
-            -- Groupbox open/close — ONLY the switch (PC behavior unchanged).
-            -- Mobile: Active=true + Touch InputBegan so the toggle works with finger.
-            -- Debounce avoids double-fire if both MouseButton1Down and Touch map fire.
-            local _lastToggleAt = 0
+            -- PC: original MouseButton1Down only
+            -- Mobile: also Touch InputBegan (Active was false so touch never fired)
+            local _lastSectionToggle = 0
             local function FireSectionToggle()
                 local now = os.clock()
-                if now - _lastToggleAt < 0.15 then
-                    return
-                end
-                _lastToggleAt = now
+                if now - _lastSectionToggle < 0.15 then return end
+                _lastSectionToggle = now
                 Section:ToggleBackground()
             end
             Items["Toggle"]:Connect("MouseButton1Down", FireSectionToggle)
-            Items["Toggle"]:Connect("InputBegan", function(Input)
-                if Input.UserInputType == Enum.UserInputType.Touch then
-                    FireSectionToggle()
-                end
-            end)
+            if IsMobile then
+                Items["Toggle"]:Connect("InputBegan", function(Input)
+                    if Input.UserInputType == Enum.UserInputType.Touch then
+                        FireSectionToggle()
+                    end
+                end)
+            end
 
             Section.Page.Sections[Section.Name] = Section
             table.insert(Section.Page.Sections, Section)
@@ -5137,42 +5129,64 @@ local Library do
             }
 
             local Items = { } do 
-                -- Full-width row is NOT a button (so scrolling/tapping text won't flip).
-                -- Visual checkbox is the original Frame; a transparent hit target sits on top of it only.
-                Items["Toggle"] = Instances:Create("Frame", {
-                    Parent = Toggle.Section.Items["Content"].Instance,
-                    Name = "\0",
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 26),
-                    ZIndex = 2,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })
+                -- PC: original full-row TextButton. Mobile: Frame row + bigger checkbox hit only.
+                local boxSize = IsMobile and 26 or 18
+                local rowH = IsMobile and 26 or 18
+
+                if IsMobile then
+                    Items["Toggle"] = Instances:Create("Frame", {
+                        Parent = Toggle.Section.Items["Content"].Instance,
+                        Name = "\0",
+                        BackgroundTransparency = 1,
+                        BorderSizePixel = 0,
+                        Size = UDim2New(1, 0, 0, rowH),
+                        ZIndex = 2,
+                        BackgroundColor3 = FromRGB(255, 255, 255)
+                    })
+                else
+                    Items["Toggle"] = Instances:Create("TextButton", {
+                        Parent = Toggle.Section.Items["Content"].Instance,
+                        Name = "\0",
+                        FontFace = Library.Font,
+                        TextColor3 = FromRGB(0, 0, 0),
+                        BorderColor3 = FromRGB(0, 0, 0),
+                        Text = "",
+                        AutoButtonColor = false,
+                        BackgroundTransparency = 1,
+                        BorderSizePixel = 0,
+                        Size = UDim2New(1, 0, 0, rowH),
+                        ZIndex = 2,
+                        TextSize = 14,
+                        BackgroundColor3 = FromRGB(255, 255, 255)
+                    })
+                end
                 
                 Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Size = UDim2New(0, 26, 0, 26),
+                    Size = UDim2New(0, boxSize, 0, boxSize),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
-                
-                Items["Hit"] = Instances:Create("TextButton", {
-                    Parent = Items["Indicator"].Instance,
-                    Name = "\0",
-                    Text = "",
-                    AutoButtonColor = false,
-                    Active = true,
-                    AnchorPoint = Vector2New(0.5, 0.5),
-                    Position = UDim2New(0.5, 0, 0.5, 0),
-                    Size = UDim2New(1, 10, 1, 10),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    ZIndex = 5,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })
+
+                if IsMobile then
+                    Items["Hit"] = Instances:Create("TextButton", {
+                        Parent = Items["Indicator"].Instance,
+                        Name = "\0",
+                        Text = "",
+                        AutoButtonColor = false,
+                        Active = true,
+                        AnchorPoint = Vector2New(0.5, 0.5),
+                        Position = UDim2New(0.5, 0, 0.5, 0),
+                        Size = UDim2New(1, 10, 1, 10),
+                        BackgroundTransparency = 1,
+                        BorderSizePixel = 0,
+                        ZIndex = 5,
+                        BackgroundColor3 = FromRGB(255, 255, 255)
+                    })
+                end
                 
                 Instances:Create("UICorner", {
                     Parent = Items["Indicator"].Instance,
@@ -5228,7 +5242,7 @@ local Library do
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -5242,22 +5256,20 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
-                Items["Indicator"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 28, 0, 28), Position = UDim2New(0, -1, 0, -1)})
+                local hoverTarget = IsMobile and Items["Indicator"] or Items["Toggle"]
+                local boxSize = IsMobile and 26 or 18
+                local hoverSize = IsMobile and 28 or 21
+                hoverTarget:OnHover(function()
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, hoverSize, 0, hoverSize), Position = UDim2New(0, IsMobile and -1 or -3, 0, IsMobile and -1 or -3)})
                 end)
 
-                Items["Indicator"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 26, 0, 26), Position = UDim2New(0, 0, 0, 0)})
+                hoverTarget:OnHoverLeave(function()
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, boxSize, 0, boxSize), Position = UDim2New(0, 0, 0, 0)})
                 end)
             end
 
             Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-            Items["Text"].Instance.Position = UDim2New(0, 92, 0, 0)
-            -- Center label vertically against taller checkbox
-            pcall(function()
-                Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                Items["Text"].Instance.Position = UDim2New(0, 92, 0.5, 0)
-            end)
+            Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
 
             --Toggle.Section.Items["Fade"].Instance.Size = UDim2New(1, 0, 0, Toggle.Section.Items["Content"].Instance.AbsoluteSize.X - 180)
 
@@ -5271,7 +5283,9 @@ local Library do
 
                 if Toggle.Value then 
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0, Size = UDim2New(1, 0, 1, 0)})
-                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 14, 0, 13)})
+                    local ck = IsMobile and 14 or 10
+                    local ck2 = IsMobile and 13 or 9
+                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, ck, 0, ck2)})
                 else
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.05, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
                     Items["CheckImage"]:Tween(nil, {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
@@ -5375,7 +5389,7 @@ local Library do
                         ZIndex = 2,
                         AnchorPoint = Vector2New(0, 1),
                         Position = UDim2New(0, 8, 1, -8),
-                        TextSize = 18,
+                        TextSize = 14,
                         BackgroundColor3 = FromRGB(27, 26, 29)
                     })  SettingsItem["Button"]:AddToTheme({BackgroundColor3 = "Element"})
     
@@ -5429,7 +5443,7 @@ local Library do
                         Position = UDim2New(0.5, 0, 0.5, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
-                        TextSize = 18,
+                        TextSize = 14,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  SettingsItem["Text"]:AddToTheme({TextColor3 = "Text"})   
 
@@ -5612,32 +5626,55 @@ local Library do
             end
 
             function Toggle:RefreshPosition(Bool)
+                local textOff = IsMobile and 32 or 24
+                local textOff2 = IsMobile and 92 or 84
                 if Bool then
-                    -- Instant final layout (was 1s tween — left text off-center until done)
                     Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
-                    Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                    Items["Text"].Instance.Position = UDim2New(0, 32, 0.5, 0)
+                    if IsMobile then
+                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        Items["Text"].Instance.Position = UDim2New(0, textOff, 0.5, 0)
+                    else
+                        Items["Text"].Instance.Position = UDim2New(0, textOff, 0, 0)
+                    end
                 else
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-                    Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                    Items["Text"].Instance.Position = UDim2New(0, 92, 0.5, 0)
+                    if IsMobile then
+                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        Items["Text"].Instance.Position = UDim2New(0, textOff2, 0.5, 0)
+                    else
+                        Items["Text"].Instance.Position = UDim2New(0, textOff2, 0, 0)
+                    end
                 end
             end
 
-            -- Only the checkbox hit target toggles (not the label). Visual Set() unchanged.
-            local _lastToggleClick = 0
-            local function FlipToggle()
-                local now = os.clock()
-                if now - _lastToggleClick < 0.15 then return end
-                _lastToggleClick = now
-                Toggle:Set(not Toggle.Value)
-            end
-            Items["Hit"]:Connect("MouseButton1Click", FlipToggle)
-            Items["Hit"]:Connect("InputBegan", function(Input)
-                if Input.UserInputType == Enum.UserInputType.Touch then
-                    FlipToggle()
+            if IsMobile then
+                -- Mobile: only the checkbox — scrolling over text won't flip toggles
+                local _lastToggleClick = 0
+                local function FlipToggle()
+                    local now = os.clock()
+                    if now - _lastToggleClick < 0.15 then return end
+                    _lastToggleClick = now
+                    Toggle:Set(not Toggle.Value)
                 end
-            end)
+                if Items["Hit"] then
+                    Items["Hit"]:Connect("MouseButton1Click", FlipToggle)
+                    Items["Hit"]:Connect("InputBegan", function(Input)
+                        if Input.UserInputType == Enum.UserInputType.Touch then
+                            FlipToggle()
+                        end
+                    end)
+                end
+            else
+                -- PC: original — whole row is clickable
+                Items["Toggle"]:Connect("InputBegan", function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
+                        if Items["SettingsIcon"] and Library:IsMouseOverFrame(Items["SettingsIcon"]) then
+                            return 
+                        end
+                        Toggle:Set(not Toggle.Value)
+                    end
+                end)
+            end
 
             Toggle:Set(Toggle.Default, true)
 
@@ -5675,7 +5712,7 @@ local Library do
                     BorderSizePixel = 0,
                     Size = UDim2New(1, 0, 0, 32),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Button"]:AddToTheme({BackgroundColor3 = "Element"})
 
@@ -5729,7 +5766,7 @@ local Library do
                     Position = UDim2New(0.5, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})          
                 
@@ -5842,7 +5879,7 @@ local Library do
                     BorderSizePixel = 0,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -5859,7 +5896,7 @@ local Library do
                     Position = UDim2New(0, 20, 1, -3),
                     Size = UDim2New(1, -40, 0, 7),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealSlider"]:AddToTheme({BackgroundColor3 = "Element"})
 
@@ -5921,7 +5958,7 @@ local Library do
                     Position = UDim2New(1, 0, 0.5, -3),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Plus"]:AddToTheme({TextColor3 = "Text"})
 
@@ -5940,7 +5977,7 @@ local Library do
                     Position = UDim2New(0, -2, 0.5, -2),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Minus"]:AddToTheme({TextColor3 = "Text"})
 
@@ -5959,7 +5996,7 @@ local Library do
                     Position = UDim2New(1, 0, 0, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
 
@@ -6121,7 +6158,7 @@ local Library do
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6138,7 +6175,7 @@ local Library do
                     Position = UDim2New(1, 0, 0, 0),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Element"})
                 
@@ -6164,7 +6201,7 @@ local Library do
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6457,7 +6494,7 @@ local Library do
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 0, 26),
                     BorderSizePixel = 0,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -6502,7 +6539,7 @@ local Library do
                     Position = UDim2New(0, 30, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 18,
+                    TextSize = 15,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  OptionText:AddToTheme({TextColor3 = "Text"})
                 
@@ -6757,7 +6794,7 @@ local Library do
                     Position = UDim2New(0, 30, 0, 5),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})          
             end
@@ -6937,7 +6974,7 @@ local Library do
                     SelectionOrder = 2,
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["KeyButton"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -6955,7 +6992,7 @@ local Library do
                     Position = UDim2New(0, 0, 0, 5),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
                 
@@ -7017,7 +7054,7 @@ local Library do
                     Position = UDim2New(0, 0, 0, -1),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Toggle"]:AddToTheme({TextColor3 = function()
                     return Library.Theme.Text
@@ -7038,7 +7075,7 @@ local Library do
                     Position = UDim2New(0.35, 0, 0, -1),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Hold"]:AddToTheme({TextColor3 = function()
                     return Library.Theme.Text
@@ -7059,7 +7096,7 @@ local Library do
                     Position = UDim2New(0.7, -12, 0, -1),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Always"]:AddToTheme({TextColor3 = function()
                     return Library.Theme.Text
@@ -7439,7 +7476,7 @@ local Library do
                     PlaceholderColor3 = FromRGB(185, 185, 185),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     PlaceholderText = Textbox.Placeholder,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Input"]:AddToTheme({TextColor3 = "Text"})               
             end
@@ -7547,7 +7584,7 @@ local Library do
                     PlaceholderColor3 = FromRGB(185, 185, 185),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     PlaceholderText = "Search..",
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["Search"]:AddToTheme({TextColor3 = "Text", BackgroundColor3 = "Element"})
                 
@@ -7717,7 +7754,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 20),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
@@ -7764,7 +7801,7 @@ local Library do
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 18,
+                    TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  OptionText:AddToTheme({TextColor3 = "Text"})
                 
@@ -8070,7 +8107,7 @@ Library.Sections.Tabbox = function(self, Data)
             Name = "\0",
             Text = Name,
             FontFace = Library.Font,
-            TextSize = 18,
+            TextSize = 13,
             TextColor3 = FromRGB(200, 200, 200),
             AutoButtonColor = false,
             Size = UDim2New(1 / countAfter, 0, 1, 0),
@@ -8238,7 +8275,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["ESPPreview"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 18,
+            TextSize = 14,
             TextColor3 = FromRGB(240, 240, 240),
             TextTransparency = 0.3,
             Text = Data.Name or Data.name or "Preview",
@@ -8345,7 +8382,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 16,
+            TextSize = 12,
             TextColor3 = FromRGB(255, 255, 255),
             Text = (LocalPlayer and LocalPlayer.Name) or "Player",
             BackgroundTransparency = 1,
@@ -8361,7 +8398,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 15,
+            TextSize = 11,
             TextColor3 = FromRGB(200, 200, 200),
             Text = "12m",
             BackgroundTransparency = 1,
@@ -8397,7 +8434,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 14,
+            TextSize = 10,
             TextColor3 = FromRGB(80, 255, 80),
             Text = "100",
             BackgroundTransparency = 1,
@@ -8469,7 +8506,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 15,
+            TextSize = 11,
             TextColor3 = FromRGB(0, 200, 200),
             Text = "AK-47",
             BackgroundTransparency = 1,
@@ -8486,7 +8523,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 14,
+            TextSize = 10,
             TextColor3 = FromRGB(255, 255, 255),
             Text = "F\nW",
             BackgroundTransparency = 1,
@@ -8504,7 +8541,7 @@ Library.Sections.ESPPreview = function(self, Data)
             Parent = Items["Overlay"].Instance,
             Name = "\0",
             FontFace = Library.Font,
-            TextSize = 14,
+            TextSize = 10,
             TextColor3 = FromRGB(80, 255, 120),
             Text = "TEAM",
             BackgroundTransparency = 1,
@@ -9508,7 +9545,7 @@ do
     WMLabel.Size = UDim2.new(1, -12, 1, 0)
     WMLabel.Position = UDim2.new(0, 8, 0, 0)
     WMLabel.Font = Enum.Font.Gotham
-    WMLabel.TextSize = 18
+    WMLabel.TextSize = 13
     WMLabel.TextXAlignment = Enum.TextXAlignment.Left
     WMLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
     WMLabel.Text = "Watermark"
