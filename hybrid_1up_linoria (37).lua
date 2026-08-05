@@ -2308,7 +2308,7 @@ local Library do
                     AnchorPoint = Vector2New(0.5, 0.5),
                     BackgroundTransparency = 0.12,
                     Position = UDim2New(0.5519999861717224, 0, 0.5, 0),
-                    Size = UDim2New(0, 480, 0, 580),
+                    Size = UDim2New(0, 540, 0, 640),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2318,11 +2318,11 @@ local Library do
                     Instances:Create("UIScale", {
                         Parent = Items["MainFrame"].Instance,
                         Name = "\0",
-                        Scale = 0.699999988079071
+                        Scale = 0.78
                     })                    
                 end
 
-                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
+                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(720, 820), Window)
                 pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
@@ -2384,8 +2384,8 @@ local Library do
 
                 -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
                 Window.SidebarCollapsed = false
-                Window._SidebarExpandedWidth = 180
-                Window._SidebarCollapsedWidth = 72
+                Window._SidebarExpandedWidth = 196
+                Window._SidebarCollapsedWidth = 80
                 Window._SidebarHoverOpen = false
 
                 local function SetSidebarTabTexts(Visible)
@@ -4663,15 +4663,15 @@ local Library do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Top"].Instance,
                     Name = "\0",
-                    Active = false,
+                    Active = true,
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Selectable = false,
+                    Selectable = true,
                     Position = UDim2New(1, -15, 0.5, 0),
-                    Size = UDim2New(0, 26, 0, 16),
-                    ZIndex = 2,
+                    Size = UDim2New(0, 36, 0, 22),
+                    ZIndex = 3,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  --Items["Toggle"]:AddToTheme({BackgroundColor3 = "Accent"})
@@ -4998,8 +4998,31 @@ local Library do
                 end
             end
 
-            Items["Toggle"]:Connect("MouseButton1Down", function()
+            -- Groupbox open/close. Active was previously false so touch never reached
+            -- the switch on mobile. One shared handler with a short debounce so the
+            -- header + switch cannot fire twice for the same press.
+            local _lastToggleAt = 0
+            local function FireSectionToggle()
+                local now = os.clock()
+                if now - _lastToggleAt < 0.18 then
+                    return
+                end
+                _lastToggleAt = now
                 Section:ToggleBackground()
+            end
+            Items["Toggle"]:Connect("MouseButton1Down", FireSectionToggle)
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+                if Input.UserInputType == Enum.UserInputType.Touch then
+                    FireSectionToggle()
+                end
+            end)
+            -- Whole header tappable — much easier on mobile than the tiny switch alone
+            Items["Top"]:Connect("InputBegan", function(Input)
+                if Input.UserInputType ~= Enum.UserInputType.Touch
+                    and Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+                    return
+                end
+                FireSectionToggle()
             end)
 
             Section.Page.Sections[Section.Name] = Section
