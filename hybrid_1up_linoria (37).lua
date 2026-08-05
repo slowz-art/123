@@ -5137,30 +5137,40 @@ local Library do
             }
 
             local Items = { } do 
-                -- Row is non-interactive so scrolling/tapping the label won't flip the toggle.
-                -- Only the Indicator (checkbox) receives clicks/touches.
+                -- Full-width row is NOT a button (so scrolling/tapping text won't flip).
+                -- Visual checkbox is the original Frame; a transparent hit target sits on top of it only.
                 Items["Toggle"] = Instances:Create("Frame", {
                     Parent = Toggle.Section.Items["Content"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 20),
+                    Size = UDim2New(1, 0, 0, 18),
                     ZIndex = 2,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
                 
-                Items["Indicator"] = Instances:Create("TextButton", {
+                Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
+                    Name = "\0",
+                    Size = UDim2New(0, 18, 0, 18),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    ZIndex = 2,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(124, 163, 255)
+                })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
+                
+                Items["Hit"] = Instances:Create("TextButton", {
+                    Parent = Items["Indicator"].Instance,
                     Name = "\0",
                     Text = "",
                     AutoButtonColor = false,
                     Active = true,
-                    Size = UDim2New(0, 20, 0, 20),
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    ZIndex = 3,
+                    Size = UDim2New(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(124, 163, 255)
-                })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
+                    ZIndex = 5,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
                 
                 Instances:Create("UICorner", {
                     Parent = Items["Indicator"].Instance,
@@ -5231,11 +5241,11 @@ local Library do
                 end})
 
                 Items["Indicator"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 22, 0, 22), Position = UDim2New(0, -1, 0, -1)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -1.5, 0, -1.5)})
                 end)
 
                 Items["Indicator"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 20, 0, 20), Position = UDim2New(0, 0, 0, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 18, 0, 18), Position = UDim2New(0, 0, 0, 0)})
                 end)
             end
 
@@ -5598,24 +5608,23 @@ local Library do
                 if Bool then
                     -- Instant final layout (was 1s tween — left text off-center until done)
                     Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 28, 0, 0)
+                    Items["Text"].Instance.Position = UDim2New(0, 24, 0, 0)
                 else
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 88, 0, 0)
+                    Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
                 end
             end
 
-            -- Only the checkbox indicator toggles — label/text is not clickable
-            -- Single handler (MouseButton1Down remaps to TouchTap on mobile via Instances.Connect)
+            -- Only the checkbox hit target toggles (not the label). Visual Set() unchanged.
             local _lastToggleClick = 0
             local function FlipToggle()
                 local now = os.clock()
-                if now - _lastToggleClick < 0.12 then return end
+                if now - _lastToggleClick < 0.15 then return end
                 _lastToggleClick = now
                 Toggle:Set(not Toggle.Value)
             end
-            Items["Indicator"]:Connect("MouseButton1Down", FlipToggle)
-            Items["Indicator"]:Connect("InputBegan", function(Input)
+            Items["Hit"]:Connect("MouseButton1Click", FlipToggle)
+            Items["Hit"]:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.Touch then
                     FlipToggle()
                 end
