@@ -3569,19 +3569,19 @@ local Library do
             end
 
             function Window:SetOpen(Bool)
-                Window.IsOpen = Bool == true
-
                 local Main = Items["MainFrame"].Instance
-                if not Window._RestPos then
-                    Window._RestPos = Main.Position
-                end
-                if Main.Visible and Window.IsOpen then
-                    Window._RestPos = Main.Position
-                end
-                local rest = Window._RestPos or Main.Position
+                Bool = Bool == true
 
-                if Window.IsOpen then
-                    -- Force visible immediately so UI always pops (debounce was blocking re-open)
+                if Window.IsOpen == Bool then
+                    return -- already in that state, nothing to do
+                end
+
+                if Bool then
+                    -- OPENING: restore exactly where it was left (never jump to the button)
+                    Window.IsOpen = true
+                    local rest = Window._RestPos or Main.Position
+
+                    Main.Position = rest
                     Main.Visible = true
                     Main.BackgroundTransparency = math.min(Main.BackgroundTransparency, 0.12)
                     pcall(function()
@@ -3589,9 +3589,13 @@ local Library do
                             Library.Holder.Instance.Enabled = true
                         end
                     end)
-                    Main.Position = rest
                     Debounce = false
                 else
+                    -- CLOSING: save the CURRENT position (including drags) before animating away
+                    Window._RestPos = Main.Position
+                    local rest = Window._RestPos
+                    Window.IsOpen = false
+
                     local animTime = 0.25
                     local slideOffset = 50
                     local upPos = UDim2New(rest.X.Scale, rest.X.Offset, rest.Y.Scale, rest.Y.Offset - slideOffset)
