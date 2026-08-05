@@ -5144,7 +5144,7 @@ local Library do
                     Name = "\0",
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 18),
+                    Size = UDim2New(1, 0, 0, 26),
                     ZIndex = 2,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
@@ -5152,7 +5152,7 @@ local Library do
                 Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Size = UDim2New(0, 18, 0, 18),
+                    Size = UDim2New(0, 26, 0, 26),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -5165,7 +5165,9 @@ local Library do
                     Text = "",
                     AutoButtonColor = false,
                     Active = true,
-                    Size = UDim2New(1, 0, 1, 0),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(1, 10, 1, 10),
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
                     ZIndex = 5,
@@ -5241,16 +5243,21 @@ local Library do
                 end})
 
                 Items["Indicator"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -1.5, 0, -1.5)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 28, 0, 28), Position = UDim2New(0, -1, 0, -1)})
                 end)
 
                 Items["Indicator"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 18, 0, 18), Position = UDim2New(0, 0, 0, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 26, 0, 26), Position = UDim2New(0, 0, 0, 0)})
                 end)
             end
 
             Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-            Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
+            Items["Text"].Instance.Position = UDim2New(0, 92, 0, 0)
+            -- Center label vertically against taller checkbox
+            pcall(function()
+                Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                Items["Text"].Instance.Position = UDim2New(0, 92, 0.5, 0)
+            end)
 
             --Toggle.Section.Items["Fade"].Instance.Size = UDim2New(1, 0, 0, Toggle.Section.Items["Content"].Instance.AbsoluteSize.X - 180)
 
@@ -5264,7 +5271,7 @@ local Library do
 
                 if Toggle.Value then 
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0, Size = UDim2New(1, 0, 1, 0)})
-                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 10, 0, 9)})
+                    Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 14, 0, 13)})
                 else
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.05, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
                     Items["CheckImage"]:Tween(nil, {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
@@ -5608,10 +5615,12 @@ local Library do
                 if Bool then
                     -- Instant final layout (was 1s tween — left text off-center until done)
                     Items["Indicator"].Instance.Position = UDim2New(0, 0, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 24, 0, 0)
+                    Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                    Items["Text"].Instance.Position = UDim2New(0, 32, 0.5, 0)
                 else
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
-                    Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
+                    Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                    Items["Text"].Instance.Position = UDim2New(0, 92, 0.5, 0)
                 end
             end
 
